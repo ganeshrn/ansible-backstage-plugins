@@ -1,0 +1,6 @@
+app:
+  title: Ansible Backstage App
+  baseUrl: http://localhost:3000
+
+organization:
+  name: Ansible

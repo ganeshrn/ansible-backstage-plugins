@@ -166,3 +166,6 @@ plugins-report.csv
 
 # Temporary knip configs
 knip.json
+
+# Remove me
+dynamic-plugins-info/

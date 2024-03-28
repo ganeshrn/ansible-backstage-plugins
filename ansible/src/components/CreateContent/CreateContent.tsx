@@ -16,13 +16,13 @@
 
 import React from 'react';
 import { ContentHeader, InfoCard } from '@backstage/core-components';
-import { CardContent, CardHeader, Grid, Typography, makeStyles, Card, CardActionArea, CardActions, Button, Box } from '@material-ui/core';
+import { Grid, Typography, makeStyles } from '@material-ui/core';
 import { useAsync } from 'react-use';
-import { CatalogFilterLayout, EntityKindPicker, EntityListProvider, EntitySearchBar, EntityTagPicker, UserListPicker, catalogApiRef } from '@backstage/plugin-catalog-react';
+import { CatalogFilterLayout, EntityKindPicker, EntityListProvider, EntitySearchBar, UserListPicker, catalogApiRef } from '@backstage/plugin-catalog-react';
 import { useApi } from '@backstage/core-plugin-api';
-import { Content, Header, Page, Progress} from '@backstage/core-components';
+import { Content, Page, Progress} from '@backstage/core-components';
 import { Entity } from '@backstage/catalog-model';
-import { ScaffolderPageContextMenu, TemplateCategoryPicker, TemplateGroups } from '@backstage/plugin-scaffolder-react/alpha';
+import { TemplateGroups } from '@backstage/plugin-scaffolder-react/alpha';
 
 const useStyles = makeStyles({
   container: {
@@ -65,7 +65,7 @@ const EntityCreateIntroCard = () => {
 }
 
 export const EntityCreateContentCards = () => {
-  const classes = useStyles();
+  // const classes = useStyles();
   const catalogApi = useApi(catalogApiRef);
   const { value: templates, loading, error } = useAsync(() => {
     return catalogApi.getEntities({ filter: { kind: 'Template' } });
@@ -99,15 +99,12 @@ export const EntityCreateContentCards = () => {
           />
         </CatalogFilterLayout.Filters>
         <CatalogFilterLayout.Content>
-          {ansibleTemplates.map((template, index) => (
+          {ansibleTemplates.map(( _template, index) => (
         <TemplateGroups
-        key={index}
+        key={index|| ""}
         groups={[{
           filter: (entity: Entity) => entity.metadata.tags?.includes('ansible') || false
         }]}
-        // TemplateCardComponent={undefined}
-        // onTemplateSelected={(_template: Entity) => {}}
-        // additionalLinksForEntity={(entity: Entity) => []}
         />
       ))}
         </CatalogFilterLayout.Content>
