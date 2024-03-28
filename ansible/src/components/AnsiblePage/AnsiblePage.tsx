@@ -14,11 +14,14 @@
  * limitations under the License.
  */
 import React from 'react';
-import { Tab } from '@material-ui/core';
+import { Typography, Grid, Tab } from '@material-ui/core';
 import {
+  InfoCard,
   Header,
   Page,
   Content,
+  ContentHeader,
+  SupportButton,
   TabbedCard,
 } from '@backstage/core-components';
 import { EntityOverviewContent } from '../OverviewContent';
