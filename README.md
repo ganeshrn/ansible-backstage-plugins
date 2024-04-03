@@ -201,9 +201,14 @@ folder run the below command
 
 ## Frontend plugin
 
+Install frontend plugin dependency in the Ansible plugins path by running below command in `ansible-backstage-plugins/ansible` folder
+```bash
+yarn install
+```
+
 To load the frontend plugin with  locally follow the below steps
 
-1. Run the following commands
+- Run the following commands
 
 ```bash
 pkg=<local-clone-parent-path-replace-me>/ansible-backstage-plugins/ansible
@@ -212,7 +217,7 @@ tar -xzf "$archive" && rm "$archive"
 mv package $(echo $archive | sed -e 's:\.tgz$::')
 ```
 
-2. Add the below section in `app-config.local.yaml` file
+- Add the below section in `app-config.local.yaml` file
 
 ```yaml
 dynamicPlugins:
@@ -229,7 +234,7 @@ dynamicPlugins:
             text: Ansible
 ```
 
-3. Start frontend by running the command in the root folder of ``
+- Start frontend by running the command in the root folder of ``
    cloned repository path.
 
 ```bash
@@ -240,14 +245,14 @@ LOG_LEVEL=debug yarn start
 
 To load the backend plugin with  locally follow the below steps
 
-1. Run the following commands
+- Run the following commands
 
 ```bash
 cd scaffolder-backend-module-ansible
 yarn export-dynamic
 ```
 
-2. Update the below section in `app-config.local.yaml` file
+- Update the below section in `app-config.local.yaml` file
 
 ```yaml
 dynamicPlugins:
@@ -258,7 +263,7 @@ dynamicPlugins:
           mountPoint: entity.page.overview/cards
 ```
 
-2.1. Register the template catalog section in `app-config.local.yaml` file
+and register the template catalog section in `app-config.local.yaml` file
 
 ```yaml
 catalog:
@@ -269,7 +274,7 @@ catalog:
         - allow: [Template]
 ```
 
-2.3. Update the integration section in `app-config.local.yaml` file so with your secret to push the scaffolded repo to GH.
+- Update the integration section in `app-config.local.yaml` file so with your secret to push the scaffolded repo to GH.
 
 ```yaml
 integrations:
@@ -278,7 +283,7 @@ integrations:
       token: "foo_ThisIsATopSecretTokenToPushDataInGh"
 ```
 
-3. Update the package.json at `packages/backend/package.json`
+- Update the package.json at `packages/backend/package.json`
 
 ```json
 "@backstage/plugin-scaffolder-backend-module-ansible": "^0.0.0",
@@ -305,7 +310,7 @@ index d05d495..92424f9 100644
      "express-prom-bundle": "6.6.0",
 ```
 
-4. To register action with ID 'publish:github' we need to patch backend/src/index.ts
+- To register action with ID 'publish:github' we need to patch backend/src/index.ts
 
 ```diff
 diff --git a/packages/backend/src/index.ts b/packages/backend/src/index.ts
