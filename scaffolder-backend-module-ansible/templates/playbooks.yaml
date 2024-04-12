@@ -66,7 +66,7 @@ spec:
         description: "${{ parameters.description }}"
         collectionGroup: "${{ parameters.collectionGroup }}"
         collectionName: "${{ parameters.collectionName }}"
-        applicationType: PlaybookProject
+        applicationType: playbook-project
         sourceControl: github.com
 
     - id: catalogTemplate
@@ -78,7 +78,7 @@ spec:
           repoUrl: "${{ parameters.repoUrl }}"
           owner: ${{ parameters.owner }}
           system: ${{ parameters.system }}
-          applicationType: PlaybookProject
+          applicationType: playbook-project
           description: ${{ parameters.description }}
           collectionGroup: ${{ parameters.collectionGroup }}
           collectionName: ${{ parameters.collectionName }}

@@ -69,7 +69,7 @@ export async function ansibleCreatorRun(
 ) {
   let creatorServiceUrl = "http://localhost:5000/init?";
   creatorServiceUrl +=
-    applicationType === "PlaybookProject"
+    applicationType === "playbook-project"
       ? `project=ansible-project&scm_org=${collectionGroup}&scm_project=${collectionName}`
       : `collection=${collectionGroup}.${collectionName}`;
 
