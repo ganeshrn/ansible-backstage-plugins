@@ -24,13 +24,15 @@ export function createAnsibleContentAction() {
     description: string;
     collectionGroup: string;
     collectionName: string;
+    projectGroup: string;
+    projectName: string;
   }>({
     id: 'ansible:content:create',
     description: 'Runs Ansible creator to scaffold Ansible content',
     schema: {
       input: {
         type: 'object',
-        required: ['repoUrl', 'collectionGroup', 'collectionName'],
+        required: ['repoUrl'],
         properties: {
           repoUrl: {
             title: 'Repository URL',
@@ -47,6 +49,16 @@ export function createAnsibleContentAction() {
             description: 'The "collectionName" part of "collectionOrg.collectionName"',
             type: 'string',
           },
+          projectGroup: {
+            title: 'Project',
+            description: 'The "collectionOrg" part of "collectionOrg.collectionName',
+            type: 'string',
+          },
+          projectName: {
+            title: 'Project name',
+            description: 'The "collectionName" part of "collectionOrg.collectionName"',
+            type: 'string',
+          },
           description: {
             title: 'Description',
             description: 'Describe this Collection and its purpose to help other users know what to use it for',
@@ -56,7 +68,7 @@ export function createAnsibleContentAction() {
       },
     },
     async handler(ctx) {
-      const { repoUrl, description, collectionGroup, collectionName } = ctx.input;
+      const { repoUrl, description, collectionGroup, collectionName, projectGroup, projectName } = ctx.input;
       ctx.logger.info(
         `Creating Ansible content within ${collectionGroup}.${collectionName} collection at ${repoUrl} with description: ${description}`
       );
@@ -67,6 +79,8 @@ export function createAnsibleContentAction() {
         description,
         collectionGroup,
         collectionName,
+        projectGroup,
+        projectName,
       );
     },
   });

@@ -28,10 +28,6 @@ async function downloadFromCreatorService(
 ) {
     const requestOptions = {
         method: 'GET',
-        // headers: {
-        //     'Content-Type': 'application/json'
-        // },
-        // body: JSON.stringify({ collection_name: collectionOrgName })
     };
 
     try {
@@ -66,15 +62,34 @@ export async function ansibleCreatorRun(
   _description: string,
   collectionGroup: string,
   collectionName: string,
+  projectGroup: string,
+  projectName: string,
 ) {
+
+  let _isAnsibleProject = false;
+  let creatorServiceUrl = "http://localhost:3004/init?"
+  let collection_name = ""
+  if (projectGroup && projectName)
+    {
+      _isAnsibleProject = true;
+      creatorServiceUrl = creatorServiceUrl + `project=ansible-project&scm_org=${projectGroup}&scm_project=${projectName}`;
+    }
+  else
+    {
+      creatorServiceUrl = creatorServiceUrl + `collection=${collectionGroup}.${collectionName}`;
+    }
+
   logger.info(`Running ansible collection create for ${collectionGroup}.${collectionName}`);
 
   const scaffoldPath = workspacePath
   ? workspacePath
   : `${os.homedir()}/.ansible/collections/ansible_collections`;
 
-  const collection_name = `${collectionGroup}-${collectionName}.tar`;
-  const creatorServiceUrl = `http://localhost:3004/init?collection=${collectionGroup}.${collectionName}`;
+  if (_isAnsibleProject == true)
+    {collection_name = `${projectGroup}-${projectName}.tar`;}
+  else
+    {collection_name = `${collectionGroup}-${collectionName}.tar`;}
+
 
   logger.debug(`[ansible-creator] Invoking ansible-creator service with collection args: ${collection_name}`);
   await downloadFromCreatorService(scaffoldPath, logger, creatorServiceUrl, collection_name);

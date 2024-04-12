@@ -1,24 +1,25 @@
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
-  name: collection-template
-  title: Create a Ansible Collection Project
-  description: Create a starter Ansible collection project preconfigured for tests and pipelines. Includes Development settings and configuration for building an execution environment
+  name: playbook-template
+  title: Create a Ansible Playbook Project
+  description: Create a starter Ansible Playbook project preconfigured for tests and pipelines. Includes Development settings and configuration for building an execution environment
   tags:
     - recommended
     - ansible
+    - playbook
 spec:
   owner: ansible-authors
   system: ansible
   type: service
   parameters:
-    - title: Provide information about the new component
+    - title: Provide information about the new Ansible Project component
       required:
         - repoUrl
         - system
         - owner
-        - collectionGroup
-        - collectionName
+        - projectGroup
+        - projectName
       properties:
         repoUrl:
           title: Repository Location
@@ -30,14 +31,14 @@ spec:
         description:
           title: Description
           type: string
-          description: Describe this Collection and its purpose to help other users know what to use it for
-        collectionGroup:
-          title: Collection group name
-          description: The "collectionOrg" part of "collectionOrg.collectionName"
+          description: Describe this Project and its purpose to help other users know what to use it for
+        projectGroup:
+          title: Project group name
+          description: The "ProjectOrg" part of "ProjectOrg.ProjectName"
           type: string
-        collectionName:
-          title: Collection name
-          description: The "collectionName" part of "collectionOrg.collectionName"
+        projectName:
+          title: Project name
+          description: The "ProjectName" part of "ProjectOrg.ProjectName"
           type: string
         owner:
           title: Owner
@@ -63,8 +64,8 @@ spec:
       input:
         repoUrl: "${{ parameters.repoUrl }}"
         description: "${{ parameters.description }}"
-        collectionGroup: "${{ parameters.collectionGroup }}"
-        collectionName: "${{ parameters.collectionName }}"
+        projectGroup: "${{ parameters.projectGroup }}"
+        projectName: "${{ parameters.projectName }}"
         applicationType: Collection
         sourceControl: github.com
 
@@ -72,15 +73,15 @@ spec:
       name: Generating the Catalog Info Component
       action: fetch:template
       input:
-        url: ./catalog-info-collection/
+        url: ./catalog-info-playbook/
         values:
           repoUrl: "${{ parameters.repoUrl }}"
           owner: ${{ parameters.owner }}
           system: ${{ parameters.system }}
           applicationType: Collection
           description: ${{ parameters.description }}
-          collectionGroup: ${{ parameters.collectionGroup }}
-          collectionName: ${{ parameters.collectionName }}
+          projectGroup: ${{ parameters.projectGroup }}
+          projectName: ${{ parameters.projectName }}
           sourceControl: github.com
 
     - id: publish
