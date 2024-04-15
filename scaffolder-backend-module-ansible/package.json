@@ -44,5 +44,6 @@
     "dist-dynamic/*.*",
     "dist-dynamic/dist/**",
     "dist-dynamic/alpha/*"
-  ]
+  ],
+  "configSchema": "config.d.ts"
 }

@@ -16,6 +16,8 @@
 
 import { createTemplateAction } from "@backstage/plugin-scaffolder-node";
 import { ansibleCreatorRun } from "./ansibleContentCreate";
+import { readAnsibleConfigs } from "../utils/config";
+import { ConfigReader } from "@backstage/config";
 import { Logger } from "winston";
 
 export function createAnsibleContentAction() {
@@ -65,6 +67,20 @@ export function createAnsibleContentAction() {
       ctx.logger.info(
         `Creating Ansible content within ${collectionGroup}.${collectionName} collection at ${repoUrl} with description: ${description}`
       );
+
+      const configuration = new ConfigReader({
+        catalog: {
+          providers: {
+            ansible: {
+              devSpacesBaseUrl: "https://localhost:4000",
+              baseUrl: "localhost",
+              port: "5000",
+            },
+          },
+        },
+      });
+      const ansibleDetails = readAnsibleConfigs(configuration);
+
       await ansibleCreatorRun(
         ctx.workspacePath,
         ctx.input.applicationType,

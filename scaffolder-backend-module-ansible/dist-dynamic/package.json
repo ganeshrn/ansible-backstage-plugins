@@ -21,6 +21,7 @@
   "files": [
     "dist"
   ],
+  "configSchema": "config.d.ts",
   "bundleDependencies": true,
   "peerDependencies": {
     "@backstage/backend-common": "^0.21.6",
