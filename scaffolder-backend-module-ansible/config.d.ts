@@ -7,7 +7,7 @@ export interface Config {
     /**
      * Base url for the creator-service
      */
-    ansibleCreatorService: {
+    creatorService: {
       /**
        * Base url for the creator-service
        * @visibility secret
