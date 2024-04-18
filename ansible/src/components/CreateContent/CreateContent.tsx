@@ -14,23 +14,29 @@
  * limitations under the License.
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ContentHeader, InfoCard } from '@backstage/core-components';
 import { Grid, Typography, makeStyles } from '@material-ui/core';
 import { useAsync } from 'react-use';
 import {
   CatalogFilterLayout,
+  EntityKindFilter,
   EntityKindPicker,
   EntityListProvider,
   EntitySearchBar,
+  EntityTagFilter,
+  EntityTagPicker,
   UserListPicker,
   catalogApiRef,
+  useEntityList,
 } from '@backstage/plugin-catalog-react';
 import { useApi } from '@backstage/core-plugin-api';
 import { Content, Page, Progress } from '@backstage/core-components';
 import { Entity } from '@backstage/catalog-model';
 import { TemplateGroups } from '@backstage/plugin-scaffolder-react/alpha';
 import { useNavigate } from 'react-router';
+
+import AnsibleCreateIcon from '../../../images/ansible-create.png';
 
 const useStyles = makeStyles(theme => ({
   container: {
@@ -43,10 +49,28 @@ const useStyles = makeStyles(theme => ({
   },
   card: {
     maxWidth: 345,
-    backgroundColor: theme.palette.type === 'light' ? '#1f1f1f' : 'currentColor', // Set the background color of the card to a dark gray
+    backgroundColor:
+      theme.palette.type === 'light' ? '#1f1f1f' : 'currentColor', // Set the background color of the card to a dark gray
   },
   cardContent: {
     textAlign: 'left', // Align the card content to the left
+  },
+  flex: {
+    display: 'flex',
+  },
+  img_create: {
+    width: '50px',
+    height: '50px',
+    margin: '5px',
+  },
+  fw_700: {
+    fontWeight: 700,
+  },
+  fontSize14: {
+    fontSize: '14px',
+  },
+  pt_05: {
+    paddingTop: '0.5rem',
   },
 }));
 
@@ -55,11 +79,25 @@ const EntityCreateIntroCard = () => {
   return (
     <Grid container spacing={3}>
       <Grid item xs={12}>
-        <InfoCard title="Easy creation with templates">
-          <Typography variant="body1" className={classes.text}>
-            Create new components with a single, clear,
-            <br />
-            opinionated method to accomplish a specific task
+        <InfoCard>
+          <Typography variant="body1" className={classes.flex}>
+            <img
+              className={classes.img_create}
+              src={AnsibleCreateIcon}
+              alt="Create"
+              title="Create"
+            />
+            <Typography
+              component="span"
+              className={`${classes.fontSize14} ${classes.pt_05}`}
+            >
+              <Typography component="span" className={`${classes.fw_700}`}>
+                Easy creation with templates!
+                <br />
+              </Typography>
+              Create new components with a single, clear, opinionated method to
+              accomplish a specific task.
+            </Typography>
           </Typography>
         </InfoCard>
       </Grid>
@@ -69,66 +107,61 @@ const EntityCreateIntroCard = () => {
 
 export const EntityCreateContentCards = () => {
   const navigate = useNavigate();
-  const catalogApi = useApi(catalogApiRef);
-  const {
-    value: templates,
-    loading,
-    error,
-  } = useAsync(() => {
-    return catalogApi.getEntities({
-      filter: { kind: 'template', 'metadata.tags': 'ansible' },
-    });
-  }, []);
+
+  const { loading, error, filters, updateFilters } = useEntityList();
+
+  useEffect(() => {
+    if (!filters.tags) {
+      updateFilters({
+        ...filters,
+        tags: new EntityTagFilter(['ansible']),
+      });
+    }
+  }, [filters, updateFilters]);
 
   if (loading) {
-    return <Progress />;
+    return (
+      <div>
+        <Progress />
+      </div>
+    );
   }
 
-  if (error || !templates) {
-    return <Typography variant="h6">Failed to load templates</Typography>;
+  if (error) {
+    return <div>Error: {error.message}</div>;
   }
-
-  const ansibleTemplates = templates?.items;
 
   return (
-    <EntityListProvider>
-      <Page themeId="home">
-        <Content>
-          <ContentHeader title="Available Templates" />
+    <Page themeId="home">
+      <Content>
+        <ContentHeader title="Available Templates" />
 
-          <CatalogFilterLayout>
-            <CatalogFilterLayout.Filters>
-              <EntitySearchBar />
-              <EntityKindPicker initialFilter="template" hidden />
-              <UserListPicker
-                initialFilter="all"
-                availableFilters={['starred']}
-              />
-            </CatalogFilterLayout.Filters>
-            <CatalogFilterLayout.Content>
-              {ansibleTemplates.map(({}, index) => (
-                <TemplateGroups
-                  key={index}
-                  groups={[
-                    {
-                      filter: (entity: Entity) =>
-                        entity.metadata.tags?.includes('ansible') || false,
-                    },
-                  ]}
-                  // TemplateCardComponent={undefined}
-                  onTemplateSelected={(entity: Entity) =>
-                    navigate(
-                      `../../../create/templates/default/${entity.metadata.name}`,
-                    )
-                  }
-                  // additionalLinksForEntity={(entity: Entity) => []}
-                />
-              ))}
-            </CatalogFilterLayout.Content>
-          </CatalogFilterLayout>
-        </Content>
-      </Page>
-    </EntityListProvider>
+        <CatalogFilterLayout>
+          <CatalogFilterLayout.Filters>
+            <EntitySearchBar />
+            <EntityKindPicker initialFilter="template" hidden />
+            <UserListPicker availableFilters={['starred', 'all']} />
+          </CatalogFilterLayout.Filters>
+          <CatalogFilterLayout.Content>
+            <TemplateGroups
+              groups={[
+                {
+                  filter: (entity: Entity) =>
+                    entity.metadata.tags
+                      ? entity.metadata.tags.includes('ansible')
+                      : false,
+                },
+              ]}
+              onTemplateSelected={(entity: Entity) =>
+                navigate(
+                  `../../../create/templates/default/${entity.metadata.name}`,
+                )
+              }
+            />
+          </CatalogFilterLayout.Content>
+        </CatalogFilterLayout>
+      </Content>
+    </Page>
   );
 };
 
@@ -136,7 +169,9 @@ export const EntityCreateContent = () => {
   return (
     <>
       <EntityCreateIntroCard />
-      <EntityCreateContentCards />
+      <EntityListProvider>
+        <EntityCreateContentCards />
+      </EntityListProvider>
     </>
   );
 };

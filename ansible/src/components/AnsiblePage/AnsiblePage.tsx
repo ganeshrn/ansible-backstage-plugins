@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Header, Page, HeaderTabs, Content } from '@backstage/core-components';
 import { EntityOverviewContent } from '../OverviewContent';
 import { EntityCatalogContent } from '../CatalogContent';
@@ -31,10 +31,10 @@ import {
 const AnisbleHeader = () => <Header title="Ansible" />;
 
 const tabs = [
-  { id: 0, label: 'Overview' },
-  { id: 1, label: 'Catalog' },
-  { id: 2, label: 'Create' },
-  { id: 3, label: 'Learn' },
+  { id: 0, label: 'Overview', nav: 'overview' },
+  { id: 1, label: 'My Items', nav: 'myitems' },
+  { id: 2, label: 'Create', nav: 'create' },
+  { id: 3, label: 'Learn', nav: 'learn' },
 ];
 
 export const AnsiblePage = () => {
@@ -43,13 +43,19 @@ export const AnsiblePage = () => {
   const navigate = useNavigate();
   
   const selectedTabIndex = tabs.findIndex(
-    item => item.label.toLocaleLowerCase() === section,
+    item => item.nav === section,
   );
-  const [selectedTab, setSelectedTab] = useState<any>(tabs[selectedTabIndex > -1 ? selectedTabIndex : 0]);
+  const [selectedTab, setSelectedTab] = useState<any>(0);
 
+  useEffect(() => {
+    if(selectedTabIndex > -1) {
+      setSelectedTab(tabs[selectedTabIndex])
+    }
+  }, [selectedTabIndex])
+  
   const onTabSelect = (index: number) => {
     setSelectedTab(tabs[index]);
-    navigate(tabs[index].label.toLocaleLowerCase());
+    navigate(tabs[index].nav);
   };
   return (
     section === '' ? <Navigate to='overview'/> : (
@@ -71,7 +77,7 @@ export const AnsiblePage = () => {
               path="overview"
               element={<EntityOverviewContent onTabChange={onTabSelect}/>}
             />
-            <Route path="catalog" element={<EntityCatalogContent />} />
+            <Route path="myitems" element={<EntityCatalogContent />} />
             <Route path="create" element={<EntityCreateContent />} />
             <Route path="learn" element={<EntityLearnContent />} />
           </Route>
