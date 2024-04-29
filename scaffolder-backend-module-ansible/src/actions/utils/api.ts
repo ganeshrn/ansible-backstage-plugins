@@ -29,13 +29,17 @@ export class BackendServiceAPI {
     logger: any,
     workspacePath: string,
     collectionOrgName: string,
+    applicationType: string,
   ) {
     try {
       const contentDisposition = response.headers.get('content-disposition');
       const filenamePattern = /filename="(.+?)"/;
-      const fileName = contentDisposition
-        ? contentDisposition.match(filenamePattern)[1]
-        : collectionOrgName;
+      let fileName = collectionOrgName + '.tar.gz';
+      if (applicationType === 'collection-project') {
+        let fileName = contentDisposition
+          ? contentDisposition.match(filenamePattern)[1]
+          : collectionOrgName + '.tar.gz';
+      }
 
       const fileStream = fs.createWriteStream(`${workspacePath}/${fileName}`);
       await new Promise((resolve, reject) => {
@@ -79,7 +83,8 @@ export class BackendServiceAPI {
         response,
         logger,
         workspacePath,
-        collectionOrgName + '.tar',
+        collectionOrgName,
+        'playbook-project',
       );
     } catch (error) {
       console.error('Error:', error);
@@ -111,7 +116,8 @@ export class BackendServiceAPI {
         response,
         logger,
         workspacePath,
-        collectionOrgName + '.tar',
+        collectionOrgName,
+        'collection-project',
       );
     } catch (error) {
       console.error('Error:', error);
