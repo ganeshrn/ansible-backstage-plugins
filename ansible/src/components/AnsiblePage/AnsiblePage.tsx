@@ -28,7 +28,9 @@ import {
   useParams,
 } from 'react-router';
 
-const AnisbleHeader = () => <Header title="Ansible" />;
+// Ansible plug-ins for Red Hat Developer Hub
+// subtitle => Ansible plug-ins for Red Hat Developer Hub provides push-button content provisioning, step-by-step enablement, and a service catalog to accelerate user onboarding and Ansible content creation.
+const AnisbleHeader = () => <Header title="Ansible" subtitle="Ansible plug-ins provide push-button content provisioning, step-by-step enablement, and a service catalog to accelerate user onboarding and Ansible content creation." style={{fontFamily: 'Red Hat Text'}} />;
 
 const tabs = [
   { id: 0, label: 'Overview', nav: 'overview' },

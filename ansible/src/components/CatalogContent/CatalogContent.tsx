@@ -15,7 +15,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { InfoCard, Progress } from '@backstage/core-components';
+import { Progress } from '@backstage/core-components';
 import {
   Divider,
   Grid,
@@ -24,13 +24,11 @@ import {
   useTheme,
 } from '@material-ui/core';
 import {
-  CatalogApi,
   CatalogFilterLayout,
   EntityKindPicker,
   EntityListProvider,
   EntityTagFilter,
   EntityTypePicker,
-  EntityUserFilter,
   UserListPicker,
   catalogApiRef,
   useEntityList,
@@ -39,71 +37,24 @@ import {
 import { Table, TableColumn } from '@backstage/core-components';
 import { Chip } from '@material-ui/core';
 import Edit from '@material-ui/icons/Edit';
-import SearchTwoTone from '@material-ui/icons/SearchTwoTone';
 import { Link } from '@backstage/core-components';
 import { Tooltip } from '@material-ui/core';
 import { ANNOTATION_EDIT_URL, Entity } from '@backstage/catalog-model';
 import { visuallyHidden } from '@mui/utils';
 import { YellowStar } from '../OverviewContent/Favourites';
 import StarBorder from '@material-ui/icons/StarBorder';
-import { CatalogTable } from '@backstage/plugin-catalog';
 import { useApi } from '@backstage/core-plugin-api';
 import { useEffectOnce } from 'react-use';
 
-const useStyles = makeStyles({
-  container: {
-    padding: '20px',
-  },
-  text: {
-    marginTop: '5px',
-    fontSize: '15px', // Increase the font size as needed
-  },
-  flex: {
-    display: 'flex',
-  },
-  img_create: {
-    width: '50px',
-    height: '50px',
-    margin: '5px',
-  },
-  fw_700: {
-    fontWeight: 700,
-  },
-  fontSize14: {
-    fontSize: '14px',
-  },
-  p_05: {
-    padding: '0.5rem',
-  },
-  ml_16: {
-    marginLeft: '16px',
-  },
-});
-
-const EntityCreateIntroCard = () => {
-  const classes = useStyles();
-  return (
-    <InfoCard>
-      <Typography variant="body1" className={classes.flex}>
-        <Typography component="span" className={classes.img_create}>
-          <SearchTwoTone className={classes.img_create} />
-        </Typography>
-        <Typography
-          component="span"
-          className={`${classes.fontSize14} ${classes.p_05}`}
-        >
-          <Typography component="span" className={`${classes.fw_700}`}>
-            Find your stuff!
-            <br />
-          </Typography>
-          Here is a list of all the components you created with Developer Hub,
-          Ansible plugin. Any Ansible content will automatically get Ansible
-          label.
-        </Typography>
-      </Typography>
-    </InfoCard>
-  );
-};
+const useStyles = makeStyles(theme => ({
+    flex: {
+      display: 'flex',
+    },
+    ml_16: {
+      marginLeft: theme.spacing(2),
+    },
+  })
+);
 
 export const AnsibleComponents = () => {
   const classes = useStyles();
@@ -253,9 +204,6 @@ export const EntityCatalogContent = () => {
 
   return (
     <Grid container spacing={2} justifyContent="space-between">
-      <Grid item xs={12}>
-        <EntityCreateIntroCard />
-      </Grid>
       <Grid item xs={12} className={classes.flex}>
         <EntityListProvider>
           <AnsibleComponents />

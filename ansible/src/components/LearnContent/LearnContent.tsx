@@ -17,12 +17,8 @@
 import React, { useEffect, useState } from 'react';
 import { InfoCard, ItemCardGrid, Link } from '@backstage/core-components';
 import { Grid, Typography, makeStyles } from '@material-ui/core';
-import AnsibleLearnIcon from '../../../images/ansible-learn.png';
 import OpenInNew from '@material-ui/icons/OpenInNew';
-import { labs, learningPaths } from './data';
-import {
-  EntityListProvider,
-} from '@backstage/plugin-catalog-react';
+import { ILearningPath, labs, learningPaths } from './data';
 import {
   SearchBar,
   SearchContextProvider,
@@ -95,9 +91,17 @@ const useStyles = makeStyles(theme => ({
 const RenderCourses = ({ data }) => {
   const classes = useStyles();
 
-  return data.map((item, index) => (
+  const getFormat = (item: ILearningPath) => {
+    if(item.minutes)
+      return item.hours === 1 ? 'minute' : 'minutes'
+    if(item.hours)
+      return item.hours === 1 ? 'hour' : 'hours'
+    return null
+  }
+
+  return data.map((item: ILearningPath, index) => (
     <Link
-      to={item?.link}
+      to={item?.url}
       target="_blank"
       key={index}
       className={classes.textDecorationNone}
@@ -107,12 +111,12 @@ const RenderCourses = ({ data }) => {
         title={
           <div style={{ display: 'flex' }}>
             <div>{`${index + 1}.`}</div>
-            {item.name}
+            {item.label}
           </div>
         }
         subheader={
           <Typography className={`${classes.subtitle} ${classes.fontSize14}`}>
-            {`${item.time} | Ansible | ${item.level} | ${item.type}`}
+            {`${item.minutes || item.hours } ${getFormat(item)}  | Ansible | ${item.level} | ${item.type}`}
           </Typography>
         }
       >
@@ -136,12 +140,12 @@ const EntityLearnIntroCard = () => {
       setFilteredData({
         learningPaths: learningPaths.filter(
           item =>
-            item.name?.toLocaleLowerCase().includes(term) ||
+            item.label?.toLocaleLowerCase().includes(term) ||
             item.description?.toLocaleLowerCase().includes(term),
         ),
         labs: labs.filter(
           item =>
-            item.name?.toLocaleLowerCase().includes(term) ||
+            item.label?.toLocaleLowerCase().includes(term) ||
             item.description?.toLocaleLowerCase().includes(term),
         ),
       });
@@ -151,37 +155,6 @@ const EntityLearnIntroCard = () => {
 
   return (
     <>
-      <Grid container spacing={3}>
-        <Grid item xs={12} className={classes.mb40}>
-          <InfoCard>
-            <Typography variant="body1" className={classes.flex}>
-              <img
-                className={classes.img_wave}
-                src={AnsibleLearnIcon}
-                alt="Learn"
-                title="Learn"
-              />
-              <Typography component="span" className={`${classes.fontSize14}`}>
-                <Typography component="span" className={classes.fw_700}>From zero to hero!<br /></Typography>
-                These end-to-end learning journeys, created by Red Hat Ansible,
-                are for users of all skill levels. These curated learning paths
-                are a great place to start if you’re beginning your Ansible
-                journey. If you are an advanced user, these learning paths are
-                based on the latest Ansible Automation Platform versions and
-                recommended practices. Learn more at the &nbsp;
-                <Link
-                  to="https://developers.redhat.com/products/ansible/overview"
-                  target="_blank"
-                >
-                  Red Hat Developer website.
-                  <OpenInNew className={classes.open_in_new} />
-                </Link>
-              </Typography>
-            </Typography>
-          </InfoCard>
-        </Grid>
-      </Grid>
-
       <Grid container spacing={3}>
         <Grid item xs={2}>
           <SearchBar
@@ -195,6 +168,29 @@ const EntityLearnIntroCard = () => {
             values={['Learning Paths', 'Labs']}
             defaultValue={['Learning Paths', 'Labs']}
           />
+
+          <Typography style={{marginTop: '32px'}}>
+            Useful links:<br />
+
+            <Typography style={{marginTop: '16px', fontSize: '14px'}}>
+              <Link to="https://red.ht/aap-rhd-learning-paths">
+                Ansible learning paths on <br /> Red Hat Developer website
+                <OpenInNew fontSize='small' style={{marginLeft: '5px', fontSize: '14px'}}/>
+              </Link>
+            </Typography>
+            <Typography style={{marginTop: '16px', fontSize: '14px'}}>
+              <Link to="https://red.ht/rhdh-rh-learning-subscription">
+                Red Hat Learning Subscription
+                <OpenInNew fontSize='small' style={{marginLeft: '5px', fontSize: '14px'}}/>
+              </Link>
+            </Typography>
+            <Typography style={{marginTop: '16px', fontSize: '14px'}}>
+              <Link to="https://docs.ansible.com/ansible/latest/reference_appendices/glossary.html">
+                Ansible definitions
+                <OpenInNew fontSize='small' style={{marginLeft: '5px', fontSize: '14px'}}/>
+              </Link>
+            </Typography>
+          </Typography>
         </Grid>
         <Grid item xs={10}>
           {filters?.types?.includes('Learning Paths') &&

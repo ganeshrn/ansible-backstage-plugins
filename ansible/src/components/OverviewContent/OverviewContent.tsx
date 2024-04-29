@@ -20,23 +20,10 @@ import {
 } from '@material-ui/core';
 import { QuickAccessCard } from './QuickAccessCard';
 import { Favourites } from './Favourites';
-import { GettingStarted } from './GettingStarted';
-import { SearchType } from '@backstage/plugin-search';
-import { CatalogIcon, DocsIcon } from '@backstage/core-components';
-import UsersGroupsIcon from '@material-ui/icons/Person';
-import { SearchContextProvider } from '@backstage/plugin-search-react';
 
-
-type IProps = {
-  onTabChange: (index: number) => void;
-};
-
-export const EntityOverviewContent = (props: IProps) => {
+export const EntityOverviewContent = () => {
   return (
     <Grid container spacing={2} justifyContent="space-between">
-      <Grid item xs={12}>
-        <GettingStarted {...props} />
-      </Grid>
       <Grid item xs={9}>
         <QuickAccessCard />
       </Grid>

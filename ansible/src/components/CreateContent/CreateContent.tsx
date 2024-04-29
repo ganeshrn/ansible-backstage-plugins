@@ -15,28 +15,21 @@
  */
 
 import React, { useEffect } from 'react';
-import { ContentHeader, InfoCard } from '@backstage/core-components';
-import { Grid, Typography, makeStyles } from '@material-ui/core';
-import { useAsync } from 'react-use';
+import { ContentHeader } from '@backstage/core-components';
+import { makeStyles } from '@material-ui/core';
 import {
   CatalogFilterLayout,
-  EntityKindFilter,
   EntityKindPicker,
   EntityListProvider,
   EntitySearchBar,
   EntityTagFilter,
-  EntityTagPicker,
   UserListPicker,
-  catalogApiRef,
   useEntityList,
 } from '@backstage/plugin-catalog-react';
-import { useApi } from '@backstage/core-plugin-api';
 import { Content, Page, Progress } from '@backstage/core-components';
 import { Entity } from '@backstage/catalog-model';
 import { TemplateGroups } from '@backstage/plugin-scaffolder-react/alpha';
 import { useNavigate } from 'react-router';
-
-import AnsibleCreateIcon from '../../../images/ansible-create.png';
 
 const useStyles = makeStyles(theme => ({
   container: {
@@ -73,37 +66,6 @@ const useStyles = makeStyles(theme => ({
     paddingTop: '0.5rem',
   },
 }));
-
-const EntityCreateIntroCard = () => {
-  const classes = useStyles();
-  return (
-    <Grid container spacing={3}>
-      <Grid item xs={12}>
-        <InfoCard>
-          <Typography variant="body1" className={classes.flex}>
-            <img
-              className={classes.img_create}
-              src={AnsibleCreateIcon}
-              alt="Create"
-              title="Create"
-            />
-            <Typography
-              component="span"
-              className={`${classes.fontSize14} ${classes.pt_05}`}
-            >
-              <Typography component="span" className={`${classes.fw_700}`}>
-                Easy creation with templates!
-                <br />
-              </Typography>
-              Create new components with a single, clear, opinionated method to
-              accomplish a specific task.
-            </Typography>
-          </Typography>
-        </InfoCard>
-      </Grid>
-    </Grid>
-  );
-};
 
 export const EntityCreateContentCards = () => {
   const navigate = useNavigate();
@@ -168,7 +130,6 @@ export const EntityCreateContentCards = () => {
 export const EntityCreateContent = () => {
   return (
     <>
-      <EntityCreateIntroCard />
       <EntityListProvider>
         <EntityCreateContentCards />
       </EntityListProvider>
