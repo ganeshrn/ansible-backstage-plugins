@@ -161,8 +161,8 @@ const EntityLearnIntroCard = () => {
                 alt="Learn"
                 title="Learn"
               />
-              <div className={`${classes.fontSize14}`}>
-                <div className={classes.fw_700}>From zero to hero!</div>
+              <Typography component="span" className={`${classes.fontSize14}`}>
+                <Typography component="span" className={classes.fw_700}>From zero to hero!<br /></Typography>
                 These end-to-end learning journeys, created by Red Hat Ansible,
                 are for users of all skill levels. These curated learning paths
                 are a great place to start if you’re beginning your Ansible
@@ -176,7 +176,7 @@ const EntityLearnIntroCard = () => {
                   Red Hat Developer website.
                   <OpenInNew className={classes.open_in_new} />
                 </Link>
-              </div>
+              </Typography>
             </Typography>
           </InfoCard>
         </Grid>
@@ -186,7 +186,7 @@ const EntityLearnIntroCard = () => {
         <Grid item xs={2}>
           <SearchBar
             debounceTime={100}
-            className=""
+            className="MuiInput-underline"
             clearButton={false}
             placeholder="Search"
           />
@@ -201,8 +201,8 @@ const EntityLearnIntroCard = () => {
             filteredData.learningPaths.length > 0 && (
               <div style={{ marginBottom: '35px' }}>
                 <Typography paragraph>
-                  <Typography paragraph>LEARNING PATHS</Typography>
-                  <Typography paragraph className={classes.fontSize14}>
+                  <Typography component="span">LEARNING PATHS <br /> </Typography>
+                  <Typography component="span" className={classes.fontSize14}>
                     Step-by-step enablement curated by Red Hat Ansible.
                   </Typography>
                 </Typography>
@@ -213,9 +213,11 @@ const EntityLearnIntroCard = () => {
             )}
           {filters?.types?.includes('Labs') && filteredData.labs.length > 0 && (
             <div>
-              <Typography paragraph>LABS</Typography>
-              <Typography paragraph className={classes.fontSize14}>
-                Hands-on, interactive learning scenarios.
+              <Typography paragraph>
+                <Typography component="span">LABS <br /></Typography>
+                <Typography component="span" className={classes.fontSize14}>
+                  Hands-on, interactive learning scenarios.
+                </Typography>
               </Typography>
               <ItemCardGrid>
                 <RenderCourses data={filteredData.labs} />
@@ -230,10 +232,8 @@ const EntityLearnIntroCard = () => {
 
 export const EntityLearnContent = () => {
   return (
-    <EntityListProvider>
-      <SearchContextProvider>
-        <EntityLearnIntroCard />;
-      </SearchContextProvider>
-    </EntityListProvider>
+    <SearchContextProvider>
+      <EntityLearnIntroCard />;
+    </SearchContextProvider>
   );
 };

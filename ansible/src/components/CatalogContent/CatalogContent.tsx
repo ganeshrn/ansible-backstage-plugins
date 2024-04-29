@@ -14,22 +14,41 @@
  * limitations under the License.
  */
 
-import React from 'react';
-import { InfoCard } from '@backstage/core-components';
-import { Grid, Typography, makeStyles } from '@material-ui/core';
-import { useAsync } from 'react-use';
+import React, { useEffect, useState } from 'react';
+import { InfoCard, Progress } from '@backstage/core-components';
 import {
+  Divider,
+  Grid,
+  Typography,
+  makeStyles,
+  useTheme,
+} from '@material-ui/core';
+import {
+  CatalogApi,
+  CatalogFilterLayout,
+  EntityKindPicker,
+  EntityListProvider,
+  EntityTagFilter,
+  EntityTypePicker,
+  EntityUserFilter,
+  UserListPicker,
   catalogApiRef,
-  getEntitySourceLocation,
+  useEntityList,
+  useStarredEntities,
 } from '@backstage/plugin-catalog-react';
-import { useApi } from '@backstage/core-plugin-api';
 import { Table, TableColumn } from '@backstage/core-components';
 import { Chip } from '@material-ui/core';
-// eslint-disable-next-line no-restricted-imports
-import { Edit, Visibility } from '@material-ui/icons';
+import Edit from '@material-ui/icons/Edit';
+import SearchTwoTone from '@material-ui/icons/SearchTwoTone';
 import { Link } from '@backstage/core-components';
-import { IconButton, Tooltip } from '@material-ui/core';
-import { scmIntegrationsApiRef } from '@backstage/integration-react';
+import { Tooltip } from '@material-ui/core';
+import { ANNOTATION_EDIT_URL, Entity } from '@backstage/catalog-model';
+import { visuallyHidden } from '@mui/utils';
+import { YellowStar } from '../OverviewContent/Favourites';
+import StarBorder from '@material-ui/icons/StarBorder';
+import { CatalogTable } from '@backstage/plugin-catalog';
+import { useApi } from '@backstage/core-plugin-api';
+import { useEffectOnce } from 'react-use';
 
 const useStyles = makeStyles({
   container: {
@@ -39,100 +58,164 @@ const useStyles = makeStyles({
     marginTop: '5px',
     fontSize: '15px', // Increase the font size as needed
   },
+  flex: {
+    display: 'flex',
+  },
+  img_create: {
+    width: '50px',
+    height: '50px',
+    margin: '5px',
+  },
+  fw_700: {
+    fontWeight: 700,
+  },
+  fontSize14: {
+    fontSize: '14px',
+  },
+  p_05: {
+    padding: '0.5rem',
+  },
+  ml_16: {
+    marginLeft: '16px',
+  },
 });
 
-const EntityCreateCard = () => {
+const EntityCreateIntroCard = () => {
   const classes = useStyles();
   return (
-    <Grid container spacing={3}>
-      <Grid item xs={12}>
-        <InfoCard title="Find your stuff">
-          <Typography variant="body1" className={classes.text}>
-            Here is a list of all the components you created in the Developer
-            Hub, Ansible plugin. <br />
-            Any Anisble content will automatically be tagged with 'ansible'.
+    <InfoCard>
+      <Typography variant="body1" className={classes.flex}>
+        <Typography component="span" className={classes.img_create}>
+          <SearchTwoTone className={classes.img_create} />
+        </Typography>
+        <Typography
+          component="span"
+          className={`${classes.fontSize14} ${classes.p_05}`}
+        >
+          <Typography component="span" className={`${classes.fw_700}`}>
+            Find your stuff!
+            <br />
           </Typography>
-        </InfoCard>
-      </Grid>
-    </Grid>
+          Here is a list of all the components you created with Developer Hub,
+          Ansible plugin. Any Ansible content will automatically get Ansible
+          label.
+        </Typography>
+      </Typography>
+    </InfoCard>
   );
 };
 
 export const AnsibleComponents = () => {
+  const classes = useStyles();
+  const theme = useTheme();
   const catalogApi = useApi(catalogApiRef);
-  const {
-    value: entities,
-    loading,
-    error,
-  } = useAsync(() => {
-    return catalogApi.getEntities({
-      filter: [{ kind: 'component', 'metadata.tags': 'ansible' }],
-    });
-  }, []);
+  const { isStarredEntity, toggleStarredEntity } = useStarredEntities();
+  const [loading, setLoading] = useState<boolean>(true);
+  const [showError, setShowError] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string>('');
+  const [allEntities, setAllEntities] = useState<Entity[]>([]);
+  const [ansibleComponents, setAnsibleComponents] = useState<Entity[]>([]);
+
+  const {filters, updateFilters} = useEntityList();
+
+  const callApi = () => {
+    catalogApi
+      .getEntities({ filter: [{ kind: 'component', 'metadata.tags': 'ansible' }] })
+      .then(entities => {
+        setAllEntities(entities.items);
+        setAnsibleComponents(entities.items.filter(item =>
+          item.metadata.tags?.includes('ansible'),
+        ));
+        setLoading(false);
+        setShowError(false);
+      })
+      .catch(error => {
+        if (error) {
+          setErrorMessage(error.message);
+          setShowError(true);
+        }
+      });
+  }
+
+  useEffectOnce(() => {
+    updateFilters({...filters, tags: new EntityTagFilter(['ansible'])});
+    callApi();
+  })
+
+  useEffect(() => {
+    if (filters.user?.value === 'starred')
+      setAnsibleComponents(allEntities.filter(e => isStarredEntity(e)))
+    else if (filters.user?.value === 'all')
+      setAnsibleComponents(allEntities);
+  }, [filters.user])
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div>
+        <Progress />
+      </div>
+    );
   }
 
-  if (error) {
-    return <div>Error: {error.message}</div>;
-  }
+  if (showError)
+    return <div>Error: {errorMessage ?? 'Unable to retrieve data'}</div>;
 
   const columns: TableColumn[] = [
     {
       title: 'Name',
+      id: 'name',
       field: 'metadata.name',
       highlight: true,
-      render(entity: any) {
-        return (
-          <Link
-            to={`../../../catalog/default/component/${entity.metadata.name}`}
-          >
-            {entity.metadata.name}
-          </Link>
-        );
-      },
+      render: (entity: any) => (
+        <Link to={`../../../catalog/default/component/${entity.metadata.name}`}>
+          {entity.metadata.name}
+        </Link>
+      ),
     },
-    { title: 'System', field: 'spec.system' },
-    { title: 'Owner', field: 'spec.owner' },
-    { title: 'Type', field: 'spec.type' },
-    { title: 'Lifecycle', field: 'spec.lifecycle' },
+    { title: 'System', field: 'spec.system', id: 'system' },
+    { title: 'Owner', field: 'spec.owner', id: 'owner' },
+    { title: 'Type', field: 'spec.type', id: 'type' },
+    { title: 'Lifecycle', field: 'spec.lifecycle', id: 'lifecycle' },
     {
       title: 'Tags',
       field: 'metadata.tags',
+      id: 'tags',
       render: (entity: any) =>
-        entity.metadata.tags.map((tag: string) => (
-          <Chip key={tag} label={tag} />
+        entity?.metadata?.tags?.map((tag: string, index: number) => (
+          <Chip key={index} label={tag} />
         )),
-      cellStyle: { padding: '0px 16px 0px 20px' },
+      cellStyle: { padding: '16px 16px 0px 20px' },
     },
     {
       title: 'Actions',
+      id: 'actions',
       render: (entity: any) => {
-        // eslint-disable-next-line react-hooks/rules-of-hooks
-        const scmIntegrationsApi = useApi(scmIntegrationsApiRef);
-        const entitySourceLocation = getEntitySourceLocation(
-          entity,
-          scmIntegrationsApi,
-        );
-        const repoUrl = entitySourceLocation?.locationTargetUrl.replace(
-          /\/$/,
-          '',
-        );
-        const viewUrl = `${repoUrl}/catalog-info.yaml`;
-        const editUrl = viewUrl.replace('/tree/', '/edit/');
+        const editUrl = entity.metadata.annotations?.[ANNOTATION_EDIT_URL];
+        const title = 'Edit';
+        const isStarred = isStarredEntity(entity);
+        const starredTitle = isStarred
+          ? 'Remove from favorites'
+          : 'Add to favorites';
 
         return (
-          <div>
-            <Tooltip title="View">
-              <IconButton component={Link} to={viewUrl} target="_blank">
-                <Visibility />
-              </IconButton>
+          <div className={classes.flex}>
+            <Tooltip title={starredTitle}>
+              <div>
+                <Typography style={visuallyHidden}>{starredTitle}</Typography>
+                {isStarred ? (
+                  <YellowStar onClick={() => toggleStarredEntity(entity)} />
+                ) : (
+                  <StarBorder onClick={() => toggleStarredEntity(entity)} />
+                )}
+              </div>
             </Tooltip>
             <Tooltip title="Edit">
-              <IconButton component={Link} to={editUrl} target="_blank">
-                <Edit />
-              </IconButton>
+              <div className={classes.ml_16}>
+                <a href={editUrl} target="_blank">
+                  <Typography style={visuallyHidden}>{title}</Typography>
+                  <Edit fontSize="small" />
+                </a>
+              </div>
             </Tooltip>
           </div>
         );
@@ -141,20 +224,43 @@ export const AnsibleComponents = () => {
   ];
 
   return (
-    <Table
-      title={`All components (${entities?.items?.length})`}
-      options={{ search: true }}
-      columns={columns}
-      data={entities?.items || []}
-    />
+    <CatalogFilterLayout>
+      <CatalogFilterLayout.Filters>
+        <Typography variant="h6" style={{ margin: theme.spacing(1) }}>
+          Filters
+        </Typography>
+        <Divider />
+        <EntityKindPicker initialFilter="component" hidden />
+        <EntityTypePicker initialFilter="all" hidden />
+        <UserListPicker availableFilters={['starred', 'all']} />
+      </CatalogFilterLayout.Filters>
+      <CatalogFilterLayout.Content>
+        <Table
+          title={`All components (${ansibleComponents?.length})`}
+          options={{
+            search: true,
+          }}
+          columns={columns}
+          data={ansibleComponents || []}
+        />
+      </CatalogFilterLayout.Content>
+    </CatalogFilterLayout>
   );
 };
 
 export const EntityCatalogContent = () => {
+  const classes = useStyles();
+
   return (
-    <>
-      <EntityCreateCard />
-      <AnsibleComponents />
-    </>
+    <Grid container spacing={2} justifyContent="space-between">
+      <Grid item xs={12}>
+        <EntityCreateIntroCard />
+      </Grid>
+      <Grid item xs={12} className={classes.flex}>
+        <EntityListProvider>
+          <AnsibleComponents />
+        </EntityListProvider>
+      </Grid>
+    </Grid>
   );
 };

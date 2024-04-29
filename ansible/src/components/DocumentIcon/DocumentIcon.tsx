@@ -23,7 +23,7 @@ const useStyles = makeStyles(theme => ({
     height: 80,
   },
   path: {
-    fill: theme.palette.type === 'light' ? '#06C' : 'currentColor'
+    fill: theme.palette.type === 'light' ? '#06C' : 'white'
   },
 }));
 
