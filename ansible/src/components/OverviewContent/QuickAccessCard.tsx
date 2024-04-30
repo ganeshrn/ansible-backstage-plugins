@@ -15,7 +15,6 @@
  */
 
 import React from 'react';
-import { GitHubIcon } from '@backstage/core-components';
 import {
   Accordion,
   AccordionDetails,
@@ -32,8 +31,6 @@ import {
   IQuickAccessLinks,
   allData
 } from './quickAccessData';
-import { WorkspaceIcon } from '../WorkspaceIcon';
-import { DocumentIcon } from '../DocumentIcon';
 import { useNavigate } from 'react-router';
 import OpenInNew from '@material-ui/icons/OpenInNew';
 import { configApiRef, useApi } from '@backstage/core-plugin-api';
@@ -131,7 +128,6 @@ const QuickAccessAccordion = ({ data, index, expanded, config }: QuickAccessProp
   return (
     <Accordion defaultExpanded={expanded}>
       <AccordionSummary
-        // expandIcon={<ExpandMoreIcon />}
         expandIcon={<ExpandMoreIcon />}
         IconButtonProps={{ size: 'small' }}
         aria-controls={`panel${data.name}-content`}
@@ -143,7 +139,7 @@ const QuickAccessAccordion = ({ data, index, expanded, config }: QuickAccessProp
       <AccordionDetails>
         <section>
           {data.description && (
-            <Typography
+            <Typography component="div"
               className={`${classes.fontSize14} ${classes.ml25} ${classes.description}`}
             >
               {data?.description}
@@ -161,9 +157,7 @@ const QuickAccessAccordion = ({ data, index, expanded, config }: QuickAccessProp
                   >
                     <div className={classes.icon_style}>
                       <div className={classes.icon_align}>
-                        {item.icon === 'ws' && <WorkspaceIcon />}
-                        {item.icon === 'doc' && <DocumentIcon />}
-                        {item.icon === 'gh' && <GitHubIcon />}
+                        {item.icon}
                       </div>
                     </div>
                     <Typography className={classes.link_label}>

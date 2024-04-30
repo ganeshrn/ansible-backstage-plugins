@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "@backstage/catalog-model": "^1.4.5",
+    "@backstage/config": "^1.2.0",
     "@backstage/core-components": "^0.14.3",
     "@backstage/core-plugin-api": "^1.9.1",
     "@backstage/integration-react": "^1.1.25",
@@ -56,6 +57,8 @@
   },
   "files": [
     "dist",
+    "config.d.ts",
     "dist-scalprum"
-  ]
+  ],
+  "configSchema": "config.d.ts"
 }

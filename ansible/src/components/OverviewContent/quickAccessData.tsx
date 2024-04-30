@@ -17,6 +17,8 @@ import { Link } from "@backstage/core-components";
 import { Tool } from "@backstage/plugin-home";
 import OpenInNew from "@material-ui/icons/OpenInNew";
 import React from "react";
+import { WorkspaceIcon } from "../WorkspaceIcon";
+import { DocumentIcon } from "../DocumentIcon";
 
 export interface IQuickAccessLinks {
     name?: string;
@@ -62,7 +64,7 @@ export const discoverContent: IQuickAccessLinks = {
     showButton: true,
     button: {
         text: 'Go to Private Automation Hub',
-        url: 'app-config:pahUrl',
+        url: 'app-config:ansible.pahUrl',
         isExternalUrl: true
     },
     showDocsLink: true,
@@ -99,7 +101,7 @@ export const develop: IQuickAccessLinks = {
     showButton: true,
     button: {
         text: 'Go to OpenShift Dev Spaces Dashboard',
-        url: 'app-config:devSpacesBaseUrl',
+        url: 'app-config:ansible.devSpacesBaseUrl',
         isExternalUrl: true
     },
     showDocsLink: true,
@@ -115,7 +117,7 @@ export const operate: IQuickAccessLinks = {
     showButton: true,
     button: {
         text: 'Go to Ansible Automation Platform',
-        url: 'app-config:aapUrl',
+        url: 'app-config:ansible.aapUrl',
         isExternalUrl: true
     },
     showDocsLink: true,
@@ -131,17 +133,17 @@ export const developmentTools: IQuickAccessLinks = {
         {
         url: 'https://red.ht/aap-developer-tools',
         label: 'Ansible developer tools',
-        icon: 'ws',
+        icon: <WorkspaceIcon />,
         },
         {
         url: 'https://red.ht/aap-creator-guide',
         label: 'Ansible content creator guide',
-        icon: 'doc',
+        icon: <DocumentIcon />,
         },
         {
         url: 'https://docs.ansible.com/ansible/latest/reference_appendices/glossary.html',
         label: 'Ansible definitions',
-        icon: 'doc',
+        icon: <DocumentIcon />,
         },
     ],
 };
