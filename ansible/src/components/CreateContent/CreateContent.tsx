@@ -16,10 +16,8 @@
 
 import React, { useEffect } from 'react';
 import { ContentHeader } from '@backstage/core-components';
-import { makeStyles } from '@material-ui/core';
 import {
   CatalogFilterLayout,
-  EntityKindFilter,
   EntityKindPicker,
   EntityListProvider,
   EntitySearchBar,
@@ -31,42 +29,6 @@ import { Content, Page, Progress } from '@backstage/core-components';
 import { Entity } from '@backstage/catalog-model';
 import { TemplateGroups } from '@backstage/plugin-scaffolder-react/alpha';
 import { useNavigate } from 'react-router';
-
-const useStyles = makeStyles(theme => ({
-  container: {
-    // backgroundColor: 'default',
-    padding: '20px',
-  },
-  text: {
-    marginTop: '5px',
-    fontSize: '15px', // Increase the font size as needed
-  },
-  card: {
-    maxWidth: 345,
-    backgroundColor:
-      theme.palette.type === 'light' ? '#1f1f1f' : 'currentColor', // Set the background color of the card to a dark gray
-  },
-  cardContent: {
-    textAlign: 'left', // Align the card content to the left
-  },
-  flex: {
-    display: 'flex',
-  },
-  img_create: {
-    width: '50px',
-    height: '50px',
-    margin: '5px',
-  },
-  fw_700: {
-    fontWeight: 700,
-  },
-  fontSize14: {
-    fontSize: '14px',
-  },
-  pt_05: {
-    paddingTop: '0.5rem',
-  },
-}));
 
 export const EntityCreateContentCards = () => {
   const navigate = useNavigate();

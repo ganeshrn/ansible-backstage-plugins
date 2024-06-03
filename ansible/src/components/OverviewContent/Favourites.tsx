@@ -20,7 +20,7 @@ import {
   catalogApiRef,
   useStarredEntities,
 } from '@backstage/plugin-catalog-react';
-import { Typography, makeStyles, withStyles } from '@material-ui/core';
+import {Typography, makeStyles, withStyles } from '@material-ui/core';
 import Star from '@material-ui/icons/Star';
 import useAsync from 'react-use/esm/useAsync';
 import { InfoCard, Link } from '@backstage/core-components';
@@ -38,7 +38,9 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-export const YellowStar = withStyles({
+// type Props = React.ComponentType<{}> & Element
+
+export const YellowStar: React.ComponentType = withStyles({
   root: {
     color: '#f3ba37',
   },

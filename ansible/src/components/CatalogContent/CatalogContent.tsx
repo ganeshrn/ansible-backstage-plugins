@@ -153,11 +153,9 @@ export const AnsibleComponents = () => {
             <Tooltip title={starredTitle}>
               <div>
                 <Typography style={visuallyHidden}>{starredTitle}</Typography>
-                {isStarred ? (
-                  <YellowStar onClick={() => toggleStarredEntity(entity)} />
-                ) : (
-                  <StarBorder onClick={() => toggleStarredEntity(entity)} />
-                )}
+                <Typography component="span" onClick={() => toggleStarredEntity(entity)}>
+                  {isStarred ? <YellowStar /> : <StarBorder  />}
+                </Typography>
               </div>
             </Tooltip>
             <Tooltip title="Edit">

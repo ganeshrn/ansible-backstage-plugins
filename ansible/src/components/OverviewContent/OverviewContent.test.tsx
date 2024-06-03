@@ -23,7 +23,7 @@ import {
   catalogApiRef,
   starredEntitiesApiRef,
 } from '@backstage/plugin-catalog-react';
-import { catalogApi, configApi, mockEntity } from '../../tests/test_utils';
+import { catalogApi, configApi } from '../../tests/test_utils';
 
 const render = (children: JSX.Element) => {
   const mockApi = new MockStarredEntitiesApi();

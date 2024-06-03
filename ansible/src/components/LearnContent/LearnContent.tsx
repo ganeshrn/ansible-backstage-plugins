@@ -88,7 +88,7 @@ const useStyles = makeStyles(theme => ({
   },
 }));
 
-const RenderCourses = ({ data }) => {
+const RenderCourses = ({ data }: {data: ILearningPath[]}) => {
   const classes = useStyles();
 
   const getFormat = (item: ILearningPath) => {
@@ -100,7 +100,7 @@ const RenderCourses = ({ data }) => {
     return null
   }
 
-  return data.map((item: ILearningPath, index) => (
+  return data.map((item: ILearningPath, index: number) => (
     <Link
       to={item?.url}
       target="_blank"
@@ -194,7 +194,7 @@ const EntityLearnIntroCard = () => {
           </Typography>
         </Grid>
         <Grid item xs={10}>
-          {filters?.types?.includes('Learning Paths') &&
+          {Array.isArray(filters?.types) && filters?.types?.includes('Learning Paths') &&
             filteredData.learningPaths.length > 0 && (
               <div style={{ marginBottom: '35px' }} data-testid="learning-paths">
                 <Typography paragraph>
@@ -208,7 +208,7 @@ const EntityLearnIntroCard = () => {
                 </ItemCardGrid>
               </div>
             )}
-          {filters?.types?.includes('Labs') && filteredData.labs.length > 0 && (
+          {Array.isArray(filters?.types) && filters?.types?.includes('Labs') && filteredData.labs.length > 0 && (
             <div>
               <Typography paragraph>
                 <Typography component="span">LABS <br /></Typography>
