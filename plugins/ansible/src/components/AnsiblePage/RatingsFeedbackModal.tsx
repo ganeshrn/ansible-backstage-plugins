@@ -27,6 +27,9 @@ import {
   FormControlLabel,
   MenuItem,
   Select,
+  Slide,
+  SlideProps,
+  Snackbar,
   TextField,
   Typography,
   makeStyles,
@@ -37,6 +40,9 @@ const feedbackModalStyles = makeStyles(theme => ({
   required: {
     color: '#c00',
   },
+  fw_600: {
+    fontWeight: 600,
+  },
   formControl: {
     margin: theme.spacing(1),
     minWidth: 180,
@@ -46,6 +52,10 @@ const feedbackModalStyles = makeStyles(theme => ({
 type IProps = {
   handleClose: () => void;
 };
+
+function SlideTransition(props: SlideProps) {
+  return <Slide {...props} direction="up" />;
+}
 
 export default function RatingsFeedbackModal(props: IProps) {
   const config = useApi(configApiRef);
@@ -63,6 +73,11 @@ export default function RatingsFeedbackModal(props: IProps) {
   const [shareIssueFeedback, setShareIssueFeedback] =
     React.useState<boolean>(false);
 
+  const [showSnackbar, setShowSnackbar] = React.useState<boolean>(false);
+  const [snackbarMsg, setSnackbarMsg] = React.useState<string>(
+    'Thank you for sharing your feedback!',
+  );
+
   const handleChange = (event: any) => {
     setSelectedIssueType(event.target.value);
   };
@@ -75,18 +90,38 @@ export default function RatingsFeedbackModal(props: IProps) {
         feedback: feedback,
       },
     });
+    setSnackbarMsg('Thank you sharing the ratings and feedback');
+    setShowSnackbar(true);
+    const clearSentiment = setTimeout(() => {
+      setRatings(0);
+      setFeedback('');
+      setShareSentimentFeedback(false);
+      clearTimeout(clearSentiment);
+    }, 500);
   };
 
   const sendIssueFeedback = () => {
     if (config)
-    // send custom events to analytics provider
-    analytics.captureEvent('feedback', 'issue', {
-      attributes: {
-        type: selectedIssueType,
-        title: title,
-        description: description,
-      },
-    });
+      // send custom events to analytics provider
+      analytics.captureEvent('feedback', 'issue', {
+        attributes: {
+          type: selectedIssueType,
+          title: title,
+          description: description,
+        },
+      });
+    const msg = `Thank you sharing ${
+      selectedIssueType.includes('feature') ? 'this' : 'the'
+    } ${selectedIssueType.split('-').join(' ')}.`;
+    setSnackbarMsg(msg);
+    setShowSnackbar(true);
+    const clearIssueData = setTimeout(() => {
+      setSelectedIssueType('');
+      setTitle('');
+      setDescription('');
+      setShareIssueFeedback(false);
+      clearTimeout(clearIssueData);
+    }, 500);
   };
 
   return (
@@ -96,19 +131,27 @@ export default function RatingsFeedbackModal(props: IProps) {
         onClose={props.handleClose}
         aria-labelledby="modal-modal-title"
         aria-describedby="modal-modal-description"
-        translate="yes"
+        TransitionComponent={SlideTransition}
       >
         <DialogTitle>Share Your Valuable Feedback</DialogTitle>
         <Divider />
         <DialogContent>
           <FormControl className={classes.formControl}>
-            <div style={{ marginTop: '10px', marginBottom: '10px' }} data-testid="user-ratings">
+            <div
+              style={{ marginTop: '10px', marginBottom: '10px' }}
+              data-testid="user-ratings"
+            >
               <Typography
                 component="div"
                 id="modal-modal-description"
                 style={{ marginTop: 2 }}
               >
-                <Typography>How was your experience?</Typography>
+                <Typography>
+                  How was your experience?
+                  <sup className={`${classes.required} ${classes.fw_600}`}>
+                    *
+                  </sup>
+                </Typography>
                 <Rating
                   name="user-ratings"
                   value={ratings}
@@ -132,8 +175,10 @@ export default function RatingsFeedbackModal(props: IProps) {
                 minRows={10}
                 id="title"
                 label="Tell us why?"
-                placeholder="Enter details"
+                placeholder="Enter feedback"
+                value={feedback}
                 onChange={e => setFeedback(e.target.value)}
+                fullWidth
               />
             </div>
             <FormControlLabel
@@ -194,6 +239,7 @@ export default function RatingsFeedbackModal(props: IProps) {
                     <TextField
                       aria-required
                       required
+                      fullWidth
                       variant="outlined"
                       id="title"
                       label="Title"
@@ -201,16 +247,20 @@ export default function RatingsFeedbackModal(props: IProps) {
                       onChange={e => setTitle(e.target.value)}
                     />
                   </div>
-                  <div style={{ marginTop: '30px' }} data-testid="issue-description">
+                  <div
+                    style={{ marginTop: '30px' }}
+                    data-testid="issue-description"
+                  >
                     <TextField
                       aria-required
                       multiline
-                      variant="outlined"
                       required
+                      fullWidth
+                      variant="outlined"
                       minRows={10}
                       id="title"
                       label={
-                        selectedIssueType === 'bug_report'
+                        selectedIssueType === 'bug-report'
                           ? 'Steps to reproduce'
                           : 'Description'
                       }
@@ -250,6 +300,13 @@ export default function RatingsFeedbackModal(props: IProps) {
             )}
           </div>
         </DialogContent>
+        <Snackbar
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+          open={showSnackbar}
+          onClose={() => setShowSnackbar(false)}
+          autoHideDuration={3000}
+          message={snackbarMsg}
+        />
       </Dialog>
     </div>
   );
