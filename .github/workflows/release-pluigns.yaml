@@ -32,16 +32,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Show GitHub ref
-        run: echo "$GITHUB_REF"
-        if: runner.os != 'Windows'
-
-      - name: Show GitHub ref tag only
+      - name: Show GitHub ref tag
         run: echo "${GITHUB_REF##*/}"
-        if: runner.os != 'Windows'
 
       - name: Pack 📦 & release 🚀
         uses: ./.github/actions/pack
         with:
           node-version: ${{ matrix.node-version }}
-          version-tag:  ${{ github.event.release.tag_name }}
