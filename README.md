@@ -1,4 +1,4 @@
-[![CI / frontend](https://github.com/ansible/ansible-backstage-plugins/actions/workflows/tests-frontend.yaml/badge.svg?branch=main&event=schedule)](https://github.com/ansible/ansible-backstage-plugins/actions/workflows/tests-frontend.yaml) [![CI / backend](https://github.com/ansible/ansible-backstage-plugins/actions/workflows/tests-backend.yaml/badge.svg?branch=main&event=schedule)](https://github.com/ansible/ansible-backstage-plugins/actions/workflows/tests-backend.yaml)
+[![CI / frontend](https://github.com/ansible/ansible-backstage-plugins/actions/workflows/tests-frontend.yaml/badge.svg?branch=main&event=schedule)](https://github.com/ansible/ansible-backstage-plugins/actions/workflows/tests-frontend.yaml) [![CI / scaffolder / backend](https://github.com/ansible/ansible-backstage-plugins/actions/workflows/tests-scaffolder-backend.yaml/badge.svg?event=schedule)](https://github.com/ansible/ansible-backstage-plugins/actions/workflows/tests-scaffolder-backend.yaml)
 
 # Ansible plugins for Red Hat developer hub
 
