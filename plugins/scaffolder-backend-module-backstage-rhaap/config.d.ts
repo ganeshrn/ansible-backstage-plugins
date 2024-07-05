@@ -2,17 +2,17 @@ export interface Config {
   ansible?: {
     /**
      * The devspaces baseUrl for Openshift Dev Spaces Dashboard.
-     * @deepVisibility backend
+     * @visibility backend
      */
     devSpaces?: {
       /**
-      * @deepVisibility backend
+      * @visibility backend
       */
       baseUrl?: string;
     }
 
     /**
-    * @deepVisibility backend
+    * @visibility backend
     */
     aap?: {
       /**
