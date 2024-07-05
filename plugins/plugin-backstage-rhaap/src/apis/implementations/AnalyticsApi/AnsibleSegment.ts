@@ -85,11 +85,11 @@ export class AnsibleSegmentAnalytics implements AnalyticsApi {
 
     /**
      * Following events are being tracked by the ansible plugin
-     * event.context.pluginId !== 'ansible'
-     * event.context.pluginId !== 'catalog' && event.subject !== 'OpenShift Dev Spaces'
-     * template choose => navigate => subject
-     * review step click event and entityRef in context
-     * if action == create and subject = ansible template name
+     * event.context.pluginId === 'ansible'
+     * event.context.pluginId === 'catalog' && subject.includes('ansible') && subject.includes('dev spaces')
+     * template choose => navigate event and subject includes template name in the url
+     * review step click event and entityRef in context includes template name
+     * if action == create and subject includes ansible template name
      * feedback even from ansible plugin
      */
 
