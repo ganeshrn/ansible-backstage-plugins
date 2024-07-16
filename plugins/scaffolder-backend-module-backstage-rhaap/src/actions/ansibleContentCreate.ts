@@ -27,10 +27,9 @@ export async function ansibleCreatorRun(
   collectionName: string,
   creatorServiceUrl: string,
 ) {
-  const pluginLogName = 'plugin-scaffolder-backend-module-backstage-rhaap';
   const fileDownloader = new BackendServiceAPI();
   logger.info(
-    `[${pluginLogName}] Running plugin operation for ${collectionGroup}.${collectionName}`,
+    `[${BackendServiceAPI.pluginLogName}] Running plugin operation for ${collectionGroup}.${collectionName}`,
   );
 
   const scaffoldPath = workspacePath
@@ -39,7 +38,7 @@ export async function ansibleCreatorRun(
 
   const tarName = `${collectionGroup}-${applicationType}.tar.gz`;
 
-  logger.info(`[${pluginLogName}] Invoking ansible-devtools-server`);
+  logger.info(`[${BackendServiceAPI.pluginLogName}] Invoking ansible-devtools-server`);
   try {
     if (applicationType === 'playbook-project') {
       await fileDownloader.downloadPlaybookProject(
@@ -61,17 +60,17 @@ export async function ansibleCreatorRun(
       );
     }
     logger.info(
-      `[${pluginLogName}] ${applicationType} download at ${scaffoldPath}`,
+      `[${BackendServiceAPI.pluginLogName}] ${applicationType} download at ${scaffoldPath}`,
     );
   } catch (error) {
     logger.error(
-      `[${pluginLogName}] Error occurred while downloading the project tar at:`,
+      `[${BackendServiceAPI.pluginLogName}] Error occurred while downloading the project tar at:`,
       error,
     );
   }
 
   logger.info(
-    `[${pluginLogName}] Initiating ${tarName} un-tar at ${scaffoldPath}`,
+    `[${BackendServiceAPI.pluginLogName}] Initiating ${tarName} un-tar at ${scaffoldPath}`,
   );
   // untar the scaffolded collection
   await executeShellCommand({
@@ -82,10 +81,10 @@ export async function ansibleCreatorRun(
     },
     logStream: logger,
   });
-  logger.info(`[${pluginLogName}] ${tarName} un-tar successful`);
+  logger.info(`[${BackendServiceAPI.pluginLogName}] ${tarName} un-tar successful`);
 
   // delete the tarball as it must not be published in Source Control
-  logger.info(`[${pluginLogName}] deleting ${tarName} from ${scaffoldPath}`);
+  logger.info(`[${BackendServiceAPI.pluginLogName}] deleting ${tarName} from ${scaffoldPath}`);
   await executeShellCommand({
     command: 'rm',
     args: [tarName],
@@ -95,10 +94,10 @@ export async function ansibleCreatorRun(
     logStream: logger,
   });
   logger.info(
-    `[${pluginLogName}] ${scaffoldPath} clean for repository creation`,
+    `[${BackendServiceAPI.pluginLogName}] ${scaffoldPath} clean for repository creation`,
   );
 
   logger.info(
-    `[${pluginLogName}] create operation for ${applicationType} completed`,
+    `[${BackendServiceAPI.pluginLogName}] create operation for ${applicationType} completed`,
   );
 }

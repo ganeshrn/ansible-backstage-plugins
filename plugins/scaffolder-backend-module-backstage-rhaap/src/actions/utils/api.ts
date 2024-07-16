@@ -14,12 +14,23 @@
  * limitations under the License.
  */
 
+import { HostDiscovery } from '@backstage/backend-common';
+import { Config } from '@backstage/config';
 import * as fs from 'fs';
 import fetch, { Response } from 'node-fetch';
 import { Logger } from 'winston';
 
+export interface SubscriptionCheck {
+  isValid: boolean;
+  error_message: null | string;
+}
+
+export interface AnsibleApi {
+  isValidSubscription(): Promise<SubscriptionCheck>;
+}
+
 export class BackendServiceAPI {
-  pluginLogName = 'plugin-scaffolder-backend-module-backstage-rhaap';
+  static pluginLogName = 'plugin-scaffolder-backend-module-backstage-rhaap';
 
   private async sendPostRequest(url: string, data: any): Promise<Response> {
     const requestOptions = {
@@ -64,7 +75,7 @@ export class BackendServiceAPI {
           resolve(true);
         });
       });
-      logger.debug(`[${this.pluginLogName}] Project tar file downloaded successfully`);
+      logger.debug(`[${BackendServiceAPI.pluginLogName}] Project tar file downloaded successfully`);
     } catch (error) {
       if (error instanceof Error) {
         throw new Error(`Failed to download file: ${error.message}`);
@@ -82,7 +93,7 @@ export class BackendServiceAPI {
   ) {
     try {
       logger.debug(
-        `${this.pluginLogName}] Request for ansible playbook-project: ${collectionOrgName}`,
+        `${BackendServiceAPI.pluginLogName}] Request for ansible playbook-project: ${collectionOrgName}`,
       );
       const playbookUrl = 'v1/creator/playbook';
       const postData = {
@@ -111,7 +122,7 @@ export class BackendServiceAPI {
   ) {
     try {
       logger.debug(
-        `${this.pluginLogName}] Request for ansible collection-project: ${collectionOrgName}`,
+        `${BackendServiceAPI.pluginLogName}] Request for ansible collection-project: ${collectionOrgName}`,
       );
       const collectionUrl = 'v1/creator/collection';
       const postData = {
@@ -126,6 +137,29 @@ export class BackendServiceAPI {
       await this.downloadFile(response, logger, workspacePath, tarName);
     } catch (error) {
       throw new Error(`:downloadCollectionProject`);
+    }
+  }
+}
+
+export class AnsibleApiClient implements AnsibleApi {
+  private readonly config: Config;
+  private readonly logger: Logger;
+
+  constructor({config, logger}: {config: Config, logger: Logger}) {
+    this.config = config;
+    this.logger = logger;
+  }
+
+  async isValidSubscription(): Promise<SubscriptionCheck> {
+    const discovery = HostDiscovery.fromConfig(this.config);
+    try {
+      const baseUrl = await discovery.getBaseUrl('backstage-rhaap');
+      const response = await fetch(`${baseUrl}/aap/subscription`);
+      const data = await response.json();
+      return data;
+    } catch (error: any) {
+      this.logger.error(`[${BackendServiceAPI.pluginLogName}] Scaffolder AAP Error checking AAP subscription:`, error);
+      return { isValid: false, error_message: `${error.message}` };
     }
   }
 }

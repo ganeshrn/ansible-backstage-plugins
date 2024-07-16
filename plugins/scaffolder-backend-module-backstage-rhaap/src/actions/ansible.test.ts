@@ -19,7 +19,7 @@ jest.mock('./ansibleContentCreate', () => {
       ...jest.requireActual('./ansibleContentCreate'),
       ansibleCreatorRun: jest.fn().mockResolvedValue(1),
     };
-  });
+});
 
 import { getVoidLogger } from '@backstage/backend-common';
 import { createAnsibleContentAction } from './ansible';
@@ -31,6 +31,7 @@ import {
   } from './utils/config';
 import { ConfigReader } from '@backstage/config';
 import { createMockActionContext } from '@backstage/plugin-scaffolder-node-test-utils';
+import { AnsibleApiClient } from './utils/api';
 
 describe('ansible:content:create', () => {
     const config = new ConfigReader({
@@ -61,6 +62,13 @@ describe('ansible:content:create', () => {
        },
     });
 
+    const isValidSubscriptionMock = jest
+      .spyOn(AnsibleApiClient.prototype, 'isValidSubscription')
+      .mockImplementation(async () => {
+        return {isValid: true, error_message: null}
+    });
+
+
     beforeEach(() => {
       jest.clearAllMocks();
     });
@@ -69,6 +77,7 @@ describe('ansible:content:create', () => {
     it('should call output with the devSpaces.baseUrl and the repoUrl', async () => {
       await action.handler(mockContext);
 
+      expect(isValidSubscriptionMock).toHaveBeenCalledTimes(1);
       expect(mockContext.output).toHaveBeenCalledWith(
         'devSpacesBaseUrl',
         getDevspacesUrlFromAnsibleConfig(config, 'github.com', 'testOwner', 'testRepo'),
@@ -82,6 +91,7 @@ describe('ansible:content:create', () => {
     it('match ansibleCreatorRun call with the correct parameters', async () => {
       await action.handler(mockContext);
 
+      expect(isValidSubscriptionMock).toHaveBeenCalledTimes(1);
       expect(ansibleCreatorRun).toHaveBeenCalledWith(
         mockContext.workspacePath,
         'collection-project',

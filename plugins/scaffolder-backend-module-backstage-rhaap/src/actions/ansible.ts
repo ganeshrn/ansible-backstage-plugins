@@ -24,10 +24,11 @@ import {
 } from './utils/config';
 import { Logger } from 'winston';
 import { Config } from '@backstage/config';
+import { AnsibleApiClient, BackendServiceAPI } from './utils/api';
 
 export function createAnsibleContentAction(config: Config, logger: Logger) {
   return createTemplateAction<{
-    sourceControl: string,
+    sourceControl: string;
     repoOwner: string;
     repoName: string;
     description: string;
@@ -61,7 +62,8 @@ export function createAnsibleContentAction(config: Config, logger: Logger) {
           },
           repoName: {
             title: 'Repository Name',
-            description: 'The name of the new playbook project repository. For example, “my-new-playbook-repo”.',
+            description:
+              'The name of the new playbook project repository. For example, “my-new-playbook-repo”.',
             type: 'string',
           },
           collectionGroup: {
@@ -84,8 +86,7 @@ export function createAnsibleContentAction(config: Config, logger: Logger) {
           },
           applicationType: {
             title: 'Application type',
-            description:
-              'The Application type.',
+            description: 'The Application type.',
             type: 'string',
           },
         },
@@ -118,40 +119,55 @@ export function createAnsibleContentAction(config: Config, logger: Logger) {
         collectionGroup,
         collectionName,
       } = ctx.input;
-      const pluginLogName = 'plugin-scaffolder-backend-module-backstage-rhaap'
-      logger.info(
-        `[${pluginLogName}] Creating Ansible content ${collectionGroup}.${collectionName} with source control ${sourceControl}`,
-      );
+      const AAPSubscription = new AnsibleApiClient({ config, logger });
 
-      logger.info(
-        `[${pluginLogName}] Checking plugin configuration`,
-      );
-      validateAnsibleConfig(config);
-      logger.debug(
-        `[${pluginLogName}] Plugin configuration is correct`,
-      );
+      try {
+        const { isValid, error_message } =
+          await AAPSubscription.isValidSubscription();
 
-      await ansibleCreatorRun(
-        ctx.workspacePath,
-        ctx.input.applicationType,
-        logger,
-        description,
-        collectionGroup,
-        collectionName,
-        getServiceUrlFromAnsibleConfig(config),
-      );
+        if (!isValid && error_message)
+          logger.error(`[${BackendServiceAPI.pluginLogName}] ERROR: ${error_message}`);
 
-      logger.info(
-        `[${pluginLogName}] ansibleCreatorRun completed successfully`,
-      );
-      ctx.output(
-        'devSpacesBaseUrl',
-        getDevspacesUrlFromAnsibleConfig(config, sourceControl, repoOwner, repoName),
-      );
-      ctx.output('repoUrl', generateRepoUrl(sourceControl, repoOwner, repoName));
-      logger.debug(
-        `[${pluginLogName}] context output processed successfully`,
-      );
+        logger.info(
+          `[${BackendServiceAPI.pluginLogName}] Creating Ansible content ${collectionGroup}.${collectionName} with source control ${sourceControl}`,
+        );
+
+        logger.info(`[${BackendServiceAPI.pluginLogName}] Checking plugin configuration`);
+        validateAnsibleConfig(config);
+        logger.debug(`[${BackendServiceAPI.pluginLogName}] Plugin configuration is correct`);
+
+        await ansibleCreatorRun(
+          ctx.workspacePath,
+          ctx.input.applicationType,
+          logger,
+          description,
+          collectionGroup,
+          collectionName,
+          getServiceUrlFromAnsibleConfig(config),
+        );
+
+        logger.info(
+          `[${BackendServiceAPI.pluginLogName}] ansibleCreatorRun completed successfully`,
+        );
+        ctx.output(
+          'devSpacesBaseUrl',
+          getDevspacesUrlFromAnsibleConfig(
+            config,
+            sourceControl,
+            repoOwner,
+            repoName,
+          ),
+        );
+        ctx.output(
+          'repoUrl',
+          generateRepoUrl(sourceControl, repoOwner, repoName),
+        );
+        logger.debug(
+          `[${BackendServiceAPI.pluginLogName}] context output processed successfully`,
+        );
+      } catch (error: any) {
+        throw new Error(error.message);
+      }
     },
   });
 }
