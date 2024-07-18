@@ -41,7 +41,7 @@ export interface Config {
     /**
      * @deepVisibility frontend
      */
-    aap?: {
+    rhaap?: {
       /**
        * @visibility frontend
        */

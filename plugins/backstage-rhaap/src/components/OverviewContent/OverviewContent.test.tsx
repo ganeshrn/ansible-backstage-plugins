@@ -23,7 +23,7 @@ import {
   catalogApiRef,
   starredEntitiesApiRef,
 } from '@backstage/plugin-catalog-react';
-import { catalogApi, configApi } from '../../tests/test_utils';
+import { mockCatalogApi, mockConfigApi } from '../../tests/test_utils';
 
 const render = (children: JSX.Element) => {
   const mockApi = new MockStarredEntitiesApi();
@@ -31,8 +31,8 @@ const render = (children: JSX.Element) => {
   return renderInTestApp(
     <TestApiProvider
       apis={[
-        [configApiRef, configApi],
-        [catalogApiRef, catalogApi],
+        [configApiRef, mockConfigApi],
+        [catalogApiRef, mockCatalogApi],
         [starredEntitiesApiRef, mockApi],
       ]}
     >

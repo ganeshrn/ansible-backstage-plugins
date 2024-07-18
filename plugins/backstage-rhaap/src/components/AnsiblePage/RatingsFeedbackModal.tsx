@@ -25,6 +25,7 @@ import {
   Divider,
   FormControl,
   FormControlLabel,
+  InputLabel,
   MenuItem,
   Select,
   Slide,
@@ -34,7 +35,9 @@ import {
   Typography,
   makeStyles,
 } from '@material-ui/core';
-import { configApiRef, useAnalytics, useApi } from '@backstage/core-plugin-api';
+import OpenInNew from '@material-ui/icons/OpenInNew';
+import { useAnalytics } from '@backstage/core-plugin-api';
+import { Link } from '@backstage/core-components';
 
 const feedbackModalStyles = makeStyles(theme => ({
   required: {
@@ -53,25 +56,26 @@ type IProps = {
   handleClose: () => void;
 };
 
-function SlideTransition(props: SlideProps) {
-  return <Slide {...props} direction="up" />;
-}
+const SlideTransition = React.forwardRef(function Transition(
+  props: SlideProps,
+  ref: React.Ref<unknown>,
+) {
+  return <Slide direction="up" ref={ref} {...props} />;
+});
 
 export default function RatingsFeedbackModal(props: IProps) {
-  const config = useApi(configApiRef);
   const classes = feedbackModalStyles();
   const analytics = useAnalytics();
 
   const [ratings, setRatings] = React.useState<number>(0);
   const [feedback, setFeedback] = React.useState<string>('');
-  const [shareSentimentFeedback, setShareSentimentFeedback] =
+  const [shareFeedback, setShareFeedback] =
     React.useState<boolean>(false);
 
-  const [selectedIssueType, setSelectedIssueType] = React.useState<string>('');
+  const [selectedIssueType, setSelectedIssueType] =
+    React.useState<string>('sentiment');
   const [title, setTitle] = React.useState<string>('');
   const [description, setDescription] = React.useState<string>('');
-  const [shareIssueFeedback, setShareIssueFeedback] =
-    React.useState<boolean>(false);
 
   const [showSnackbar, setShowSnackbar] = React.useState<boolean>(false);
   const [snackbarMsg, setSnackbarMsg] = React.useState<string>(
@@ -80,7 +84,18 @@ export default function RatingsFeedbackModal(props: IProps) {
 
   const handleChange = (event: any) => {
     setSelectedIssueType(event.target.value);
+    setShareFeedback(false);
   };
+
+  const checkDisabled = () => {
+    if (selectedIssueType === 'sentiment') {
+      return !ratings || !feedback || !shareFeedback;
+    }
+    else if (selectedIssueType === 'feature-request') {
+      return !title || !description || !shareFeedback;
+    }
+    return false;
+  }
 
   const sendSentimentFeedback = () => {
     // send custom events to analytics provider
@@ -95,34 +110,37 @@ export default function RatingsFeedbackModal(props: IProps) {
     const clearSentiment = setTimeout(() => {
       setRatings(0);
       setFeedback('');
-      setShareSentimentFeedback(false);
+      setShareFeedback(false);
       clearTimeout(clearSentiment);
     }, 500);
   };
 
   const sendIssueFeedback = () => {
-    if (config)
-      // send custom events to analytics provider
-      analytics.captureEvent('feedback', 'issue', {
-        attributes: {
-          type: selectedIssueType,
-          title: title,
-          description: description,
-        },
-      });
-    const msg = `Thank you sharing ${
-      selectedIssueType.includes('feature') ? 'this' : 'the'
-    } ${selectedIssueType.split('-').join(' ')}.`;
+    // send custom events to analytics provider
+    analytics.captureEvent('feedback', 'issue', {
+      attributes: {
+        type: selectedIssueType,
+        title: title,
+        description: description,
+      },
+    });
+    const msg = `Thank you sharing this feature request`;
     setSnackbarMsg(msg);
     setShowSnackbar(true);
     const clearIssueData = setTimeout(() => {
-      setSelectedIssueType('');
       setTitle('');
       setDescription('');
-      setShareIssueFeedback(false);
+      setShareFeedback(false);
       clearTimeout(clearIssueData);
     }, 500);
   };
+
+  const sendFeedback = () => {
+    if (selectedIssueType === 'sentiment')
+      sendSentimentFeedback();
+    else
+      sendIssueFeedback();
+  }
 
   return (
     <div data-testid="ratings-feedback-modal">
@@ -136,105 +154,77 @@ export default function RatingsFeedbackModal(props: IProps) {
         <DialogTitle>Share Your Valuable Feedback</DialogTitle>
         <Divider />
         <DialogContent>
-          <FormControl className={classes.formControl}>
-            <div
-              style={{ marginTop: '10px', marginBottom: '10px' }}
-              data-testid="user-ratings"
-            >
-              <Typography
-                component="div"
-                id="modal-modal-description"
-                style={{ marginTop: 2 }}
+          <div style={{ marginTop: '10px', marginBottom: '10px' }}>
+            <FormControl className={classes.formControl} fullWidth>
+              <InputLabel id="feedback-type">Type of feedback</InputLabel>
+              <Select
+                labelId="feedback-type"
+                id="feedback-type"
+                value={selectedIssueType}
+                label="Type of feedback"
+                onChange={handleChange}
+                defaultValue="sentiment"
+                data-testid="feedback-type"
               >
-                <Typography>
-                  How was your experience?
-                  <sup className={`${classes.required} ${classes.fw_600}`}>
-                    *
-                  </sup>
-                </Typography>
-                <Rating
-                  name="user-ratings"
-                  value={ratings}
-                  onChange={(e, newRatings) => {
-                    e.stopPropagation();
-                    if (newRatings) setRatings(newRatings);
-                  }}
-                  style={{ marginTop: '10px' }}
-                />
-              </Typography>
-            </div>
-          </FormControl>
-          <Divider />
-          <FormControl className={classes.formControl}>
-            <div style={{ marginTop: '15px' }} data-testid="tell-us-why">
-              <TextField
-                multiline
-                variant="outlined"
-                aria-required
-                required
-                minRows={10}
-                id="title"
-                label="Tell us why?"
-                placeholder="Enter feedback"
-                value={feedback}
-                onChange={e => setFeedback(e.target.value)}
-                fullWidth
-              />
-            </div>
-            <FormControlLabel
-              style={{ marginTop: '10px' }}
-              aria-required
-              control={
-                <Checkbox
-                  data-testid="sentiment-checkbox"
-                  required
-                  checked={shareSentimentFeedback}
-                  onChange={e => setShareSentimentFeedback(e.target.checked)}
-                  aria-label="I understand that feedback is shared with Red Hat."
-                />
-              }
-              label="I understand that feedback is shared with Red Hat."
-            />
-
-            <div style={{ marginTop: '10px', marginBottom: '20px' }}>
-              <Button
-                variant="contained"
-                color="primary"
-                type="submit"
-                disabled={!ratings || !feedback || !shareSentimentFeedback}
-                onClick={sendSentimentFeedback}
-                data-testid="sentiment-submit-btn"
-              >
-                Submit
-              </Button>
-            </div>
-          </FormControl>
-          <Divider />
-          <div style={{ marginTop: '10px' }}>
+                <MenuItem value="sentiment">General Sentiment</MenuItem>
+                <MenuItem value="feature-request">Feature Request</MenuItem>
+              </Select>
+            </FormControl>
+          </div>
+          {selectedIssueType === 'sentiment' && (
             <div>
-              <Typography component="h6" variant="h6">
-                Tell us more
-              </Typography>
-              <FormControl className={classes.formControl}>
-                <Select
-                  labelId="select-issue-type"
-                  id="select-issue-type"
-                  value={selectedIssueType}
-                  label="Select Issue Type"
-                  onChange={handleChange}
-                  defaultValue="Select Issue Type"
-                  displayEmpty
-                  data-testid="select-issue-type"
+              <FormControl className={classes.formControl} fullWidth>
+                <div
+                  style={{ marginTop: '10px', marginBottom: '10px' }}
+                  data-testid="user-ratings"
                 >
-                  <MenuItem value="">Select Issue Type</MenuItem>
-                  <MenuItem value="bug-report">Bug Report</MenuItem>
-                  <MenuItem value="feature-request">Feature Request</MenuItem>
-                </Select>
+                  <Typography
+                    component="div"
+                    id="modal-modal-description"
+                    style={{ marginTop: 2 }}
+                  >
+                    <Typography>
+                      How was your experience?
+                      <sup className={`${classes.required} ${classes.fw_600}`}>
+                        *
+                      </sup>
+                    </Typography>
+                    <Rating
+                      name="user-ratings"
+                      value={ratings}
+                      onChange={(e, newRatings) => {
+                        e.stopPropagation();
+                        if (newRatings) setRatings(newRatings);
+                      }}
+                      style={{ marginTop: '10px' }}
+                    />
+                  </Typography>
+                </div>
+              </FormControl>
+              <Divider />
+              <FormControl className={classes.formControl} fullWidth>
+                <div style={{ marginTop: '15px' }} data-testid="tell-us-why">
+                  <TextField
+                    multiline
+                    variant="outlined"
+                    aria-required
+                    required
+                    minRows={10}
+                    id="title"
+                    label="Tell us why?"
+                    placeholder="Enter feedback"
+                    value={feedback}
+                    onChange={e => setFeedback(e.target.value)}
+                    fullWidth
+                  />
+                </div>
               </FormControl>
             </div>
-            {selectedIssueType !== '' && (
+          )}
+          {selectedIssueType === 'feature-request' && (
+            <div style={{ marginTop: '10px' }}>
               <div>
-                <FormControl className={classes.formControl}>
+                <FormControl className={classes.formControl} fullWidth>
                   <div data-testid="issue-title">
                     <TextField
                       aria-required
@@ -244,6 +234,7 @@ export default function RatingsFeedbackModal(props: IProps) {
                       id="title"
                       label="Title"
                       placeholder="Enter a title"
+                      value={title}
                       onChange={e => setTitle(e.target.value)}
                     />
                   </div>
@@ -259,46 +250,58 @@ export default function RatingsFeedbackModal(props: IProps) {
                       variant="outlined"
                       minRows={10}
                       id="title"
-                      label={
-                        selectedIssueType === 'bug-report'
-                          ? 'Steps to reproduce'
-                          : 'Description'
-                      }
+                      label="Description"
                       placeholder="Enter details"
+                      value={description}
                       onChange={e => setDescription(e.target.value)}
                     />
                   </div>
-                  <FormControlLabel
-                    style={{ marginTop: '10px' }}
-                    control={
-                      <Checkbox
-                        data-testid="issue-checkbox"
-                        required
-                        aria-required
-                        checked={shareIssueFeedback}
-                        onChange={e => setShareIssueFeedback(e.target.checked)}
-                        aria-label="I understand that feedback is shared with Red Hat."
-                      />
-                    }
-                    label="I understand that feedback is shared with Red Hat."
-                  />
-
-                  <div style={{ marginTop: '10px', marginBottom: '20px' }}>
-                    <Button
-                      variant="contained"
-                      color="primary"
-                      type="submit"
-                      disabled={!title || !description || !shareIssueFeedback}
-                      onClick={sendIssueFeedback}
-                      data-testid="issue-submit-btn"
-                    >
-                      Submit
-                    </Button>
-                  </div>
                 </FormControl>
               </div>
-            )}
-          </div>
+            </div>
+          )}
+          <FormControl className={classes.formControl}>
+            <FormControlLabel
+              style={{ marginTop: '10px' }}
+              aria-required
+              control={
+                <Checkbox
+                  data-testid="sentiment-checkbox"
+                  required
+                  checked={shareFeedback}
+                  onChange={e => setShareFeedback(e.target.checked)}
+                  aria-label="I understand that feedback is shared with Red Hat."
+                />
+              }
+              label={
+                <div style={{ fontSize: 14 }}>
+                  I understand that feedback is shared with Red Hat.
+                </div>
+              }
+            />
+            <div style={{ fontSize: 14 }}>
+              Red Hat uses your feedback to help improve our products and
+              services.
+              <br /> For more information, please review{' '}
+              <Link to="https://www.redhat.com/en/about/privacy-policy">
+                Red Hat's Privacy Statement{' '}
+                <OpenInNew fontSize="small" style={{ fontSize: '14px' }} />
+              </Link>
+            </div>
+
+            <div style={{ marginTop: '10px', marginBottom: '20px' }}>
+              <Button
+                variant="contained"
+                color="primary"
+                type="submit"
+                disabled={checkDisabled()}
+                onClick={sendFeedback}
+                data-testid="feedback-submit-btn"
+              >
+                Submit
+              </Button>
+            </div>
+          </FormControl>
         </DialogContent>
         <Snackbar
           anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}

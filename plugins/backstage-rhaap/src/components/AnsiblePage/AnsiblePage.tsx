@@ -15,7 +15,13 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { Header, Page, HeaderTabs, Content } from '@backstage/core-components';
+import {
+  Header,
+  Page,
+  HeaderTabs,
+  Content,
+  ContentHeader,
+} from '@backstage/core-components';
 import { EntityOverviewContent } from '../OverviewContent';
 import { EntityCatalogContent } from '../CatalogContent';
 import { EntityCreateContent } from '../CreateContent';
@@ -24,6 +30,10 @@ import { Navigate, Route, Routes, useNavigate, useParams } from 'react-router';
 import { Fab, Typography, makeStyles } from '@material-ui/core';
 import Comment from '@material-ui/icons/Comment';
 import RatingsFeedbackModal from './RatingsFeedbackModal';
+import { useApi } from '@backstage/core-plugin-api';
+import { ansibleApiRef, SubscriptionCheck } from '../../api';
+import { useEffectOnce } from 'react-use';
+import { Alert, AlertTitle } from '@material-ui/lab';
 
 const feedbackStyles = makeStyles({
   feedback_btn: {
@@ -74,9 +84,13 @@ export const AnsiblePage = () => {
   const navigate = useNavigate();
   const param = useParams();
   const section = param['*'];
+
   const [open, setOpen] = React.useState(false);
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
+
+  const [subscription, setSubscription] = React.useState<SubscriptionCheck>();
+  const ansibleApi = useApi(ansibleApiRef);
 
   const selectedTabIndex = tabs.findIndex(item => item.nav === section);
   const [selectedTab, setSelectedTab] = useState<any>(0);
@@ -86,6 +100,14 @@ export const AnsiblePage = () => {
       setSelectedTab(tabs[selectedTabIndex]);
     }
   }, [selectedTabIndex]);
+
+  useEffectOnce(() => {
+    const checkSubscription = async () => {
+      setSubscription(await ansibleApi.isValidSubscription());
+    };
+
+    checkSubscription();
+  });
 
   const onTabSelect = (index: number) => {
     setSelectedTab(tabs[index]);
@@ -106,6 +128,18 @@ export const AnsiblePage = () => {
       />
 
       <Content>
+        {subscription && !subscription?.isValid && subscription?.error_message && (
+          <ContentHeader
+            titleComponent={
+              <div>
+                <Alert severity="error" color="error" role="alert">
+                  <AlertTitle>Subscription Error</AlertTitle>
+                  {subscription.error_message}
+                </Alert>
+              </div>
+            }
+          />
+        )}
         <Routes>
           <Route path="/">
             <Route path="overview" element={<EntityOverviewContent />} />

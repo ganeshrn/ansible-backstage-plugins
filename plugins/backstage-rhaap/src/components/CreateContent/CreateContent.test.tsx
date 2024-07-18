@@ -22,7 +22,7 @@ import React from 'react';
 import { EntityCreateContent } from './CreateContent';
 import { TestApiProvider, renderInTestApp } from '@backstage/test-utils';
 import { configApiRef, errorApiRef } from '@backstage/core-plugin-api';
-import { catalogApi, configApi, mockEntities } from '../../tests/test_utils';
+import { mockCatalogApi, mockConfigApi, mockEntities } from '../../tests/test_utils';
 import {
   MockStarredEntitiesApi,
   catalogApiRef,
@@ -38,8 +38,8 @@ const render = (children: JSX.Element) => {
   return renderInTestApp(
     <TestApiProvider
       apis={[
-        [configApiRef, configApi],
-        [catalogApiRef, catalogApi],
+        [configApiRef, mockConfigApi],
+        [catalogApiRef, mockCatalogApi],
         [starredEntitiesApiRef, new MockStarredEntitiesApi()],
         [errorApiRef, errorApi],
       ]}

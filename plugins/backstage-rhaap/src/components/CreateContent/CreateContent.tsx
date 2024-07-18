@@ -29,10 +29,17 @@ import { Content, Page, Progress } from '@backstage/core-components';
 import { Entity } from '@backstage/catalog-model';
 import { TemplateGroups } from '@backstage/plugin-scaffolder-react/alpha';
 import { useNavigate } from 'react-router';
+import { makeStyles } from '@material-ui/core';
+
+const useStyles = makeStyles({
+  p0: {
+    padding: 0
+  }
+})
 
 export const EntityCreateContentCards = () => {
   const navigate = useNavigate();
-
+  const classes = useStyles();
   const { loading, error, filters, updateFilters } = useEntityList();
 
   useEffect(() => {
@@ -58,7 +65,7 @@ export const EntityCreateContentCards = () => {
 
   return (
     <Page themeId="home">
-      <Content>
+      <Content className={classes.p0}>
         <ContentHeader title="Available Templates" />
 
         <CatalogFilterLayout>

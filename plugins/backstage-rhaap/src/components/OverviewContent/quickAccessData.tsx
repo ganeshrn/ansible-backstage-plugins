@@ -135,7 +135,7 @@ export const operate: IQuickAccessLinks = {
   showButton: true,
   button: {
     text: 'Go to Ansible Automation Platform',
-    url: 'app-config:ansible.aap.baseUrl',
+    url: 'app-config:ansible.rhaap.baseUrl',
     fallbackUrl:
       'https://www.redhat.com/en/technologies/management/ansible/trial',
     isExternalUrl: true,

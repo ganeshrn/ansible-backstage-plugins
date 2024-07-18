@@ -15,12 +15,20 @@
  */
 import React from 'react';
 import { AnsiblePage } from "./AnsiblePage";
-import { renderInTestApp } from '@backstage/test-utils';
+import { renderInTestApp, TestApiProvider } from '@backstage/test-utils';
 import { screen } from '@testing-library/react';
+import { ansibleApiRef } from '../../api';
+import { mockAnsibleApi } from '../../tests/test_utils';
 
 describe('ansible', () => {
     it('should render main page', async () => {
-        const { getByTestId, getByRole } = await renderInTestApp(<AnsiblePage />);
+        const { getByTestId, getByRole } = await renderInTestApp(<TestApiProvider
+            apis={[
+              [ansibleApiRef, mockAnsibleApi]
+            ]}
+          >
+            <AnsiblePage />
+          </TestApiProvider>);
         expect(AnsiblePage).toBeDefined();
 
         // expect header, tabs to be defined and present
