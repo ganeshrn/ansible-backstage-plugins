@@ -21,17 +21,19 @@ import {
 } from '@backstage/core-plugin-api';
 
 export interface AnsibleApi {
-  isValidSubscription(): Promise<SubscriptionCheck>;
+  isValidSubscription(): Promise<AAPSubscriptionCheck>;
 }
 
 export const ansibleApiRef = createApiRef<AnsibleApi>({
   id: 'ansible',
 });
 
-export interface SubscriptionCheck {
+export interface AAPSubscriptionCheck {
+  status: number;
   isValid: boolean;
-  error_message: null | string;
+  isCompliant: boolean;
 }
+
 
 export class AnsibleApiClient implements AnsibleApi {
   private readonly discoveryApi: DiscoveryApi;
@@ -45,14 +47,14 @@ export class AnsibleApiClient implements AnsibleApi {
     this.fetchApi = options.fetchApi;
   }
 
-  async isValidSubscription(): Promise<SubscriptionCheck> {
+  async isValidSubscription(): Promise<AAPSubscriptionCheck> {
     const baseUrl = await this.discoveryApi.getBaseUrl('backstage-rhaap');
     try {
       const response = await this.fetchApi.fetch(`${baseUrl}/aap/subscription`);
       const data = await response.json();
       return data;
     } catch (error) {
-      return { isValid: false, error_message: `${error}` };
+      return { status: 0, isValid: false, isCompliant: false };
     }
   }
 }

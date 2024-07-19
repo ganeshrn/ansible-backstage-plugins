@@ -22,18 +22,20 @@ import {
   Content,
   ContentHeader,
 } from '@backstage/core-components';
+import { useApi } from '@backstage/core-plugin-api';
+import { Navigate, Route, Routes, useNavigate, useParams } from 'react-router';
+import { useEffectOnce } from 'react-use';
+import { Fab, Typography, makeStyles } from '@material-ui/core';
+import Comment from '@material-ui/icons/Comment';
+import { Alert, AlertTitle } from '@material-ui/lab';
+
+import { ansibleApiRef, AAPSubscriptionCheck } from '../../api';
 import { EntityOverviewContent } from '../OverviewContent';
 import { EntityCatalogContent } from '../CatalogContent';
 import { EntityCreateContent } from '../CreateContent';
 import { EntityLearnContent } from '../LearnContent';
-import { Navigate, Route, Routes, useNavigate, useParams } from 'react-router';
-import { Fab, Typography, makeStyles } from '@material-ui/core';
-import Comment from '@material-ui/icons/Comment';
 import RatingsFeedbackModal from './RatingsFeedbackModal';
-import { useApi } from '@backstage/core-plugin-api';
-import { ansibleApiRef, SubscriptionCheck } from '../../api';
-import { useEffectOnce } from 'react-use';
-import { Alert, AlertTitle } from '@material-ui/lab';
+import { errorTitle, errorMessage } from './SubscriptionCheckMsgs';
 
 const feedbackStyles = makeStyles({
   feedback_btn: {
@@ -89,7 +91,7 @@ export const AnsiblePage = () => {
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
-  const [subscription, setSubscription] = React.useState<SubscriptionCheck>();
+  const [subscription, setSubscription] = React.useState<AAPSubscriptionCheck | null>(null);
   const ansibleApi = useApi(ansibleApiRef);
 
   const selectedTabIndex = tabs.findIndex(item => item.nav === section);
@@ -113,6 +115,27 @@ export const AnsiblePage = () => {
     setSelectedTab(tabs[index]);
     navigate(tabs[index].nav);
   };
+
+  const renderAlertMessage = () => {
+    let title; let message;
+    if (subscription?.status === 495 || subscription?.status === 500) {
+      title = errorTitle.SSL_OR_UNREACHABLE;
+      message = errorMessage.SSL_OR_UNREACHABLE;
+    } else if (subscription?.status !== 0 && !subscription?.isCompliant) {
+      title = errorTitle.NON_COMPLIANT;
+      message = errorMessage.NON_COMPLIANT;
+    } else if (subscription?.status !== 0 && !subscription?.isValid) {
+      title = errorTitle.INVALID_LICENSE;
+      message = errorMessage.INVALID_LICENSE;
+    }
+    return (<>
+      <AlertTitle>
+        {title}
+      </AlertTitle>
+      {message}
+    </>)
+  }
+
   return section === '' ? (
     <Navigate to="overview" />
   ) : (
@@ -128,13 +151,12 @@ export const AnsiblePage = () => {
       />
 
       <Content>
-        {subscription && !subscription?.isValid && subscription?.error_message && (
+        {subscription && (
           <ContentHeader
             titleComponent={
               <div>
-                <Alert severity="error" color="error" role="alert">
-                  <AlertTitle>Subscription Error</AlertTitle>
-                  {subscription.error_message}
+                <Alert severity="warning" color="warning" role="alert">
+                  {renderAlertMessage()}
                 </Alert>
               </div>
             }
