@@ -131,7 +131,7 @@ export const develop: IQuickAccessLinks = {
 export const operate: IQuickAccessLinks = {
   name: 'Operate',
   description:
-    'Manage your automation with Ansible Automation Platform. Red Hat Ansible Automation Platform is and end-to-end automation platform to configure systems, deploy software, and orchestrate advanced workflows. It includes resources to create, manage and scale across the entire enterprise.',
+    'Manage your automation with Ansible Automation Platform. Red Hat Ansible Automation Platform is an end-to-end automation platform to configure systems, deploy software, and orchestrate advanced workflows. It includes resources to create, manage and scale across the entire enterprise.',
   showButton: true,
   button: {
     text: 'Go to Ansible Automation Platform',
