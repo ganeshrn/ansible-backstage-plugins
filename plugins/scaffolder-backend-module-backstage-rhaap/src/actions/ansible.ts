@@ -135,23 +135,23 @@ export function createAnsibleContentAction(config: Config, logger: Logger, auth:
           await AAPSubscription.isValidSubscription();
 
         if (status === 495 || status === 500) {
-          log.error(
+          log.warn(
             `Verify that Ansible Automation Platform is reachable and correctly configured in the Ansible plug-ins.`,
           );
         } else if (status === 404) {
-          log.error(
+          log.warn(
             `Verify that the resource url for Ansible Automation Platform are correctly configured in the Ansible plug-ins.`,
           );
         } else if (status === 401) {
-          log.error(
+          log.warn(
             `Verify that the authentication details for Ansible Automation Platform are correctly configured in the Ansible plug-ins.`,
           );
         } else if (!isCompliant) {
-          log.error(
+          log.warn(
             `The connected Ansible Automation Platform subscription is out of compliance. Contact your Red Hat account team to obtain a new subscription entitlement.`,
           );
         } else if (!isValid) {
-          log.error(
+          log.warn(
             `The connected Ansible Automation Platform subscription is invalid. Contact your Red Hat account team.`,
           );
         }
