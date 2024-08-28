@@ -147,6 +147,7 @@ export const AnsiblePage = () => {
               color="warning"
               role="alert"
               onClose={() => setShowSubscriptionAlert(false)}
+              data-testid="subscription-alert"
             >
               <AlertTitle>{title}</AlertTitle>
               {message}
