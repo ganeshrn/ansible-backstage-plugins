@@ -113,12 +113,19 @@ export class RHAAPService {
     reqHeaders: fetch.RequestInit,
   ) {
     try {
+      // Send request to AAP
+      this.logger.info(
+        `[backstage-rhaap-backend] Pinging api gateway at ${baseUrl}/api/gateway/v1/ping/`,
+      );
       const res = await fetch(`${baseUrl}/api/gateway/v1/ping/`, reqHeaders);
       if(!res.ok) {
         return false;
       }
       return true;
     } catch (error) {
+      this.logger.error(
+        `[backstage-rhaap-backend] error: ${error} for ${baseUrl}/api/gateway/v1/ping/`,
+      );
       return false;
     }
   }
