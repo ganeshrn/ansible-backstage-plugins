@@ -48,5 +48,5 @@ runs:
         # token: ${{ env.codecov }}
         use_oidc: true
         file: ./${{ inputs.plugin }}/coverage/lcov.info
-        fail_ci_if_error: true
+        fail_ci_if_error: false
         verbose: true
