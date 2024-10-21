@@ -79,6 +79,11 @@ jobs:
   coverage:
     name: 📝 / coverage / Node-${{ matrix.node-version }}
     runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      checks: read
+      contents: read
+      id-token: write
     defaults:
       run:
         working-directory: ./plugins/backstage-rhaap

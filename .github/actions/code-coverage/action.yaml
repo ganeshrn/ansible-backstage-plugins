@@ -46,7 +46,7 @@ runs:
       uses: codecov/codecov-action@v4
       with:
         # token: ${{ env.codecov }}
-        use_oidc: true
+        use_oidc: ${{ !(github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork) }}
         file: ./${{ inputs.plugin }}/coverage/lcov.info
         fail_ci_if_error: false
         verbose: true

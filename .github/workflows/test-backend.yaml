@@ -82,6 +82,11 @@ jobs:
     defaults:
       run:
         working-directory: ./plugins/backstage-rhaap-backend
+    permissions:
+        actions: read
+        checks: read
+        contents: read
+        id-token: write
     strategy:
       matrix:
         node-version: [18]
