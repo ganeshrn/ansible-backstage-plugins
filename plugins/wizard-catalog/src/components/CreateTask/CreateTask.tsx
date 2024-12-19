@@ -46,11 +46,10 @@ export const CreateTask = () => {
     const fetchEntity = async () => {
       setLoading(true);
       try {
-        /*
         if (!name) {
           throw new Error('Missing name in URL parameters');
-        }*/
-        const response = await scaffolderApi.getTemplateParameterSchema('name');
+        }
+        const response = await scaffolderApi.getTemplateParameterSchema(name);
         setEntityTemplate(response as TemplateParameterSchema);
       } catch (err) {
         setError('Failed to fetch entity');

@@ -13,6 +13,12 @@ import { CreateTask } from './CreateTask';
 import { scaffolderApiRef } from '@backstage/plugin-scaffolder-react';
 import { rhAapAuthApiRef } from '../../api/AuthApiRefs';
 
+// Mock the module
+jest.mock('react-router-dom', () => ({
+  ...jest.requireActual('react-router-dom'), // keep other exports intact
+  useParams: jest.fn(), // Mock `useParams`
+}));
+
 const mockRhAapAuthApi = {
   getAccessToken: jest.fn().mockResolvedValue('mocked-access-token'),
 };
@@ -43,6 +49,12 @@ describe('Create task', () => {
   };
 
   it('should render', async () => {
+    // Mock the return value of useParams directly
+    (require('react-router-dom').useParams as jest.Mock).mockReturnValue({
+      namespace: 'default',
+      name: 'generic-seed',
+    });
+
     await render(<CreateTask />);
     expect(
       screen.getByText(
