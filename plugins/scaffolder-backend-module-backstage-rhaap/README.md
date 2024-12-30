@@ -115,10 +115,18 @@ bf2da01c9e75d209f8cc7db3c2add706903292a53c34b68f456b1a7b2caae9de
 ❯ podman run -d -p 8000:8000 --name=ansible-devtools-server ghcr.io/ansible/community-ansible-dev-tools:latest adt server
 c42ff7b0b083e5388bbbaa0d2bf3969ef29d9c5dfd193621dec596139cc4bddc
 
+# For v1 API
 ❯ curl -v -O -J --header "Content-Type: application/json" \
   --data '{"collection":"namespace.name", "project": "collection"}' \
   "localhost:8000/v1/creator/collection"
 * processing: localhost:8000/v1/creator/collection
+> Host: localhost:8000
+
+# For v2 API
+❯ curl -v -O -J --header "Content-Type: application/json" \
+  --data '{"collection":"namespace.name", "project": "collection"}' \
+  "localhost:8000/v2/creator/collection"
+* processing: localhost:8000/v2/creator/collection
 > Host: localhost:8000
 ...
 < Content-Disposition: attachment; filename="namespace.name.tar.gz"
@@ -127,10 +135,18 @@ c42ff7b0b083e5388bbbaa0d2bf3969ef29d9c5dfd193621dec596139cc4bddc
 100 24825  100 24769  100    56   251k    581 --:decrement:-- --:decrement:-- --:decrement:--  252k
 * Closing connection
 
+# For v1 API
 ❯ curl -v -O -J --header "Content-Type: application/json" \
   --data '{"project":"ansible-project", "scm_org":"ansible", "scm_project": "devops"}' \
   "localhost:8000/v1/creator/playbook"
 * processing: localhost:8000/v1/creator/playbook
+> Host: localhost:8000
+
+# For v2 API
+❯ curl -v -O -J --header "Content-Type: application/json" \
+  --data '{"project":"ansible-project", "namespace":"ansible", "collection_name": "devops"}' \
+  "localhost:8000/v2/creator/playbook"
+* processing: localhost:8000/v2/creator/playbook
 > Host: localhost:8000
 ...
 < Content-Disposition: attachment; filename="ansible.devops.tar.gz"
