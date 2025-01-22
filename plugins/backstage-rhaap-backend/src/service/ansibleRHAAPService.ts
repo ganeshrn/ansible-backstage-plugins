@@ -19,8 +19,8 @@ import fetch from 'node-fetch';
 import https from 'https';
 
 import { DEFAULT_SCHEDULE, VALID_LICENSE_TYPES } from './constant';
-import { Logger } from 'winston';
 import {
+  LoggerService,
   readSchedulerServiceTaskScheduleDefinitionFromConfig,
   SchedulerService,
   SchedulerServiceTaskRunner,
@@ -51,11 +51,11 @@ export class RHAAPService {
   private readonly scheduleFn: () => Promise<void> = async () => {};
   private static _instance: RHAAPService;
   private config!: Config;
-  private logger!: Logger;
+  private logger!: LoggerService;
 
   private constructor(
     config: Config,
-    logger: Logger,
+    logger: LoggerService,
     scheduler?: SchedulerService,
   ) {
     if (RHAAPService._instance) return RHAAPService._instance;
@@ -86,7 +86,7 @@ export class RHAAPService {
 
   static getInstance(
     config: Config,
-    logger: Logger,
+    logger: LoggerService,
     scheduler?: SchedulerService,
   ): RHAAPService {
     return new RHAAPService(config, logger, scheduler);
