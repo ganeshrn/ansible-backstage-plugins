@@ -20,7 +20,12 @@ import https from 'https';
 
 import { DEFAULT_SCHEDULE, VALID_LICENSE_TYPES } from './constant';
 import { Logger } from 'winston';
-import { readSchedulerServiceTaskScheduleDefinitionFromConfig, SchedulerService, SchedulerServiceTaskRunner, SchedulerServiceTaskScheduleDefinition } from '@backstage/backend-plugin-api';
+import {
+  readSchedulerServiceTaskScheduleDefinitionFromConfig,
+  SchedulerService,
+  SchedulerServiceTaskRunner,
+  SchedulerServiceTaskScheduleDefinition,
+} from '@backstage/backend-plugin-api';
 
 export interface AAPSubscriptionCheck {
   status: number;
