@@ -399,6 +399,10 @@ export class AAPApiClient {
       );
     }
     const endPoint = 'api/controller/v2/job_templates/';
+    const extraVariables = payload?.extraVariables ? JSON.parse(JSON.stringify(payload.extraVariables)) : '' ;
+    if (extraVariables !== '') {
+        extraVariables.aap_validate_certs = this.ansibleConfig.checkSSL;
+    }
     const data = {
       name: payload.templateName,
       description: payload?.templateDescription ?? '',
@@ -407,9 +411,7 @@ export class AAPApiClient {
       project: payload.project.id,
       playbook: payload.playbook,
       execution_environment: payload?.executionEnvironment?.id ?? '',
-      extra_vars: payload?.extraVariables
-        ? YAML.stringify(payload.extraVariables)
-        : '',
+      extra_vars: extraVariables ? YAML.stringify(extraVariables) : '',
     };
     this.logOutput(
       'info',
