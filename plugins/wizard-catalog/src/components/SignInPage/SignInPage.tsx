@@ -13,7 +13,7 @@ export function SignInPage(props: SignInPageProps): React.JSX.Element {
         {
           id: 'rhaap',
           title: 'Ansible Automation Platform',
-          message: 'Sign in using Ansible Automation Platform user credentials',
+          message: 'Sign in using Ansible Automation Platform',
           apiRef: rhAapAuthApiRef,
         },
       ]}
