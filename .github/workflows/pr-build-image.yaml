@@ -53,10 +53,7 @@ jobs:
       - name: Determine Changed Files
         id: changes
         run: |
-          if '${{ github.event_name }}' eq 'push'; then
-            echo "IMAGE_TAG=main" >> $GITHUB_ENV
-            echo "relevant_changes=true" >> $GITHUB_ENV
-          else
+          if [[ '${{ github.event_name }}' == 'pull_request' ]]; then
             echo "IMAGE_TAG=pr-${{ github.event.number }}" >> $GITHUB_ENV
             echo "COMMIT_IMAGE_TAG=pr-${{ github.event.number }}-$SHORT_SHA" >> $GITHUB_ENV
 
@@ -76,6 +73,11 @@ jobs:
                 echo "No relevant changes detected. No build needed."
                 echo "relevant_changes=false" >> $GITHUB_ENV
             fi
+          else
+            echo "IMAGE_TAG=main" >> $GITHUB_ENV
+            echo "relevant_changes=true" >> $GITHUB_ENV
+            echo "Running on the main branch. Build is needed."
+
           fi
 
       - name: Pack plugins
