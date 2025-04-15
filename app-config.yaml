@@ -186,3 +186,14 @@ kubernetes:
 permission:
   # setting this to `false` will disable permissions
   enabled: true
+  rbac:
+    admin:
+      superUsers:
+        - name: user:default/admin
+      users:
+        - name: user:default/admin
+        - name: group:default/admins
+    pluginsWithPermission:
+      - catalog
+      - scaffolder
+      - permission

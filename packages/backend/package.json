@@ -20,6 +20,7 @@
     "@ansible/backstage-plugin-catalog-backend-module-rhaap": "workspace:^",
     "@ansible/plugin-backstage-rhaap-backend": "workspace:^",
     "@ansible/plugin-scaffolder-backend-module-backstage-rhaap": "workspace:^",
+    "@backstage-community/plugin-rbac-backend": "5.6.1",
     "@backstage/backend-defaults": "^0.6.0",
     "@backstage/backend-plugin-api": "^1.1.0",
     "@backstage/catalog-model": "^1.7.2",

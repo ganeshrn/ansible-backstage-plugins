@@ -17,6 +17,7 @@
     "@ansible/backstage-plugin-wizard-catalog": "workspace:^",
     "@ansible/plugin-backstage-portal": "^0.1.0",
     "@ansible/plugin-backstage-rhaap": "workspace:^",
+    "@backstage-community/plugin-rbac": "1.38.3",
     "@backstage/app-defaults": "^1.5.15",
     "@backstage/catalog-model": "^1.7.2",
     "@backstage/cli": "^0.29.4",

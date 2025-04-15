@@ -46,6 +46,7 @@ import {
 } from '@ansible/backstage-plugin-wizard-catalog';
 import { DelayingComponentFieldExtension } from './components/scaffolder/customScaffolderExtensions';
 import { PortalPage } from '@ansible/plugin-backstage-portal';
+import { RbacPage } from '@backstage-community/plugin-rbac';
 
 const app = createApp({
   apis,
@@ -117,6 +118,7 @@ const routes = (
     <Route path="/search" element={<SearchPage />}>
       {searchPage}
     </Route>
+    <Route path="/rbac" element={<RbacPage />} />
     <Route path="/settings" element={<UserSettingsPage />} />
     <Route path="/catalog-graph" element={<CatalogGraphPage />} />
     <Route path="/ansible" element={<AnsiblePage />} />
