@@ -12,7 +12,7 @@ import {
 } from '@backstage/core-plugin-api';
 import { AnsibleSegmentAnalyticsApi } from '@ansible/plugin-backstage-rhaap';
 import { OAuth2 } from '@backstage/core-app-api';
-import { rhAapAuthApiRef } from '@ansible/backstage-plugin-wizard-catalog';
+import { rhAapAuthApiRef } from '@ansible/plugin-backstage-portal';
 
 export const apis: AnyApiFactory[] = [
   createApiFactory({

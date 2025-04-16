@@ -39,13 +39,12 @@ import { RequirePermission } from '@backstage/plugin-permission-react';
 import { catalogEntityCreatePermission } from '@backstage/plugin-catalog-common/alpha';
 import { providers } from './identityProviders';
 import { AnsiblePage } from '@ansible/plugin-backstage-rhaap';
+import { DelayingComponentFieldExtension } from './components/scaffolder/customScaffolderExtensions';
 import {
   AAPTokenFieldExtension,
   AAPResourcePickerExtension,
-  WizardCatalogPage,
-} from '@ansible/backstage-plugin-wizard-catalog';
-import { DelayingComponentFieldExtension } from './components/scaffolder/customScaffolderExtensions';
-import { PortalPage } from '@ansible/plugin-backstage-portal';
+  PortalPage,
+} from '@ansible/plugin-backstage-portal';
 import { RbacPage } from '@backstage-community/plugin-rbac';
 
 const app = createApp({
@@ -122,7 +121,6 @@ const routes = (
     <Route path="/settings" element={<UserSettingsPage />} />
     <Route path="/catalog-graph" element={<CatalogGraphPage />} />
     <Route path="/ansible" element={<AnsiblePage />} />
-    <Route path="/wizard" element={<WizardCatalogPage />} />
     <Route path="/portal" element={<PortalPage />} />
   </FlatRoutes>
 );

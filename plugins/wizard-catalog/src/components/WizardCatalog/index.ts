@@ -1,1 +1,0 @@
-export { WizardCatalog } from './WizardCatalog';

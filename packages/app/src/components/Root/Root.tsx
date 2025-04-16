@@ -86,11 +86,6 @@ export const Root = ({ children }: PropsWithChildren<{}>) => (
             to="ansible/overview"
             text="Ansible"
           />
-          <SidebarItem
-            icon={AnsibleLogo}
-            to="wizard/catalog"
-            text="Wizard Catalog"
-          />
           <SidebarItem icon={AnsibleLogo} to="portal" text="Portal" />
         </SidebarScrollWrapper>
       </SidebarGroup>

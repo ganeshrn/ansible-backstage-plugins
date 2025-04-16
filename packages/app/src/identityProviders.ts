@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { rhAapAuthApiRef } from '@ansible/backstage-plugin-wizard-catalog';
+import { rhAapAuthApiRef } from '@ansible/plugin-backstage-portal';
 
 import { githubAuthApiRef } from '@backstage/core-plugin-api';
 
