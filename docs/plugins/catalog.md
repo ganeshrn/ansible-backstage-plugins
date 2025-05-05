@@ -1,0 +1,1 @@
+--8<-- "plugins/catalog-backend-module-rhaap/README.md"

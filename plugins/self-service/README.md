@@ -5,7 +5,9 @@ First page (catalog) is available at `/self-service/catalog`.
 
 To be fully functional, it requires other plugins for Red Hat Ansible Automation Platform:
 
-- scaffolder-backend-module-rhaap
+- auth--backend-module-rhaap-provider
+- catalog-backend-module-rhaap
+- scaffolder-backend-module-backstage-rhaap
 
 ## Getting started
 
@@ -13,12 +15,12 @@ Your plugin has been added to the example app in this repository, meaning you'll
 
 You can also serve the plugin in isolation by running `yarn start` in the plugin directory.
 This method of serving the plugin provides quicker iteration speed and a faster startup and hot reloads.
-It is only meant for local development, and the setup for it can be found inside the [/dev](./dev) directory.
+It is only meant for local development, and the setup for it can be found inside the [/dev](https://github.com/ansible/ansible-backstage-plugins/tree/main/plugins/self-service/dev) directory.
 
 ## Installation
 
 Build plugin as a dynamic plugin.
-Then configure your RHDH to load tar.gz with the plugin.
+Then configure your Ansible Self-Service to load tar.gz with the plugin.
 
 ### RHDH
 

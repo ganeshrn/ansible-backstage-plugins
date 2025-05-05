@@ -1,0 +1,1 @@
+--8<-- "plugins/auth-backend-module-rhaap-provider/README.md"

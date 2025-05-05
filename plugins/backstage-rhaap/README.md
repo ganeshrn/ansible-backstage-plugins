@@ -2,7 +2,7 @@
 
 The backstage-rhaap frontend plugin enables the Ansible sidebar option and provides access to the frontend plugin
 
-_This plugin was created through the Backstage CLI_
+_Note: This plugin was created through the Backstage CLI_
 
 ## Installation - with upstream backstage
 

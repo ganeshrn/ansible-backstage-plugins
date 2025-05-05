@@ -1,31 +1,14 @@
 # auth-backend-module-rhaap-provider
 
-The auth-backend-module-rhaap-provider is authentication plugin for Red Hat Ansible Automation Platform.
+The auth-backend-module-rhaap-provider is authentication plugin for Red Hat Ansible Automation Platforms.
 
 Note: the auth-backend-module-rhaap-provider is used only for authentication.
-For AAP user to be able to login into RHDH, also plugin catalog-backend-module-rhaap is needed.
+For AAP user to be able to login into RHDH / Ansible Self-Service, also plugin catalog-backend-module-rhaap is needed.
 The catalog-backend-module-rhaap plugin synchronizes users from AAP into RHDH.
 
 ## Installation
 
-Currently (Nov. 2024) the plugin must be a static plugin,
-as there is no support for dynamic authentication plugin in Red Hat Developer Hub.
-Support for dynamic authentication plugin is expected in 2025.
-
-Installation requires building a new container image.
-Plugin code was added to [private ](https://github.com/kcagran/) git repo, branch `rh-plugins-auth-only`.
-To build new container image follow instructions from main [](https://github.com/) repo.
-
-```shell
-git clone https://github.com/kcagran/ -auth-rhaap
-cd -auth-rhaap
-git checkout rh-plugins-auth-only
-
-IMAGE_TAG=:auth-rhaap-1
-podman build -f docker/Dockerfile -t $IMAGE_TAG .
-```
-
-The image needs to be started with environ `NODE_TLS_REJECT_UNAUTHORIZED=0`.
+Build plugin as a dynamic plugin. Then configure your RHDH to load tar.gz with the plugin.
 
 ## Configuration
 

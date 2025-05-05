@@ -2,7 +2,7 @@
 
 The scaffolder-backend-module-backstage-rhaap plugin scaffolds an Ansible collection or playbook project and adds the repo to source control. The scaffolder is dependent on ansible-devtools-server.
 
-_This plugin was created through the Backstage CLI_
+_Note: This plugin was created through the Backstage CLI_
 
 ## Installation - with upstream backstage
 
@@ -348,11 +348,11 @@ ansible:
       type: file
       target: ''
       # Use cases on github:
-      #type: url
-      #target: https://github.com/kcagran/test-templates
-      #gitBranch: main
-      #gitUser: { $GIT_USER }
-      #gitEmail: { $GIT_EMAIL }
+      # type: url
+      # target: https://github.com/kcagran/test-templates
+      # gitBranch: main
+      # gitUser: { $GIT_USER }
+      # gitEmail: { $GIT_EMAIL }
 # If showcase location type is url:
 #integrations:
 #  github:

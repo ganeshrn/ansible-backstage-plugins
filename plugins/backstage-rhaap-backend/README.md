@@ -4,7 +4,7 @@ The backstage-rhaap-backend plugin enables APIs to check AAP subscriptions.
 
     Note: After initialization, this plugin will start sending a request to check for AAP subscription status every 24 hours.
 
-_This plugin was created through the Backstage CLI_
+_Note: This plugin was created through the Backstage CLI_
 
 ## Installation - with upstream backstage
 

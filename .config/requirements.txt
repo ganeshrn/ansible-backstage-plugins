@@ -1,0 +1,17 @@
+# docs
+argparse-manpage
+cairosvg
+markdown-include
+mkdocs
+mkdocs-ansible
+mkdocs-autorefs
+mkdocs-exclude
+mkdocs-git-revision-date-localized-plugin
+mkdocs-material
+mkdocs-material-extensions
+mkdocs-multirepo-plugin
+mkdocstrings
+mkdocstrings-python
+pillow
+pymdown-extensions
+slugify

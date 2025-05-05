@@ -1,6 +1,6 @@
 # catalog-backend-module-rhaap
 
-The catalog-backend-module-rhaap plugin synchronizes users from AAP into RHDH.
+The catalog-backend-module-rhaap plugin synchronizes users from AAP into RHDH / Ansible Self-Service.
 
 ## Installation
 
