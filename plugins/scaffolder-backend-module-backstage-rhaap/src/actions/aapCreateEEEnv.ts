@@ -104,7 +104,7 @@ export const createExecutionEnvironment = (ansibleServiceRef: IAAPService) => {
         throw error;
       }
 
-      await ansibleServiceRef.setLogger(logger);
+      ansibleServiceRef.setLogger(logger);
       let eeData;
       try {
         eeData = await ansibleServiceRef.createExecutionEnvironment(

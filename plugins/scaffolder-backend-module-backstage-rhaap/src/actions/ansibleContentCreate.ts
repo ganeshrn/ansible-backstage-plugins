@@ -96,7 +96,6 @@ export async function ansibleCreatorRun(
       options: {
         cwd: scaffoldPath,
       },
-      logger,
     });
     logger.info(
       `[${BackendServiceAPI.pluginLogName}] ${tarName} un-tar successful`,
@@ -155,7 +154,7 @@ export async function handleDevfileProject(
     apiClient: null,
     useCases: [],
     organization: null,
-    token: '',
+    token: null,
   });
 
   try {

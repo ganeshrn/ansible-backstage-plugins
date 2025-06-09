@@ -49,9 +49,9 @@ import {
 } from './utils/config';
 import { ConfigReader } from '@backstage/config';
 import { createMockActionContext } from '@backstage/plugin-scaffolder-node-test-utils';
-import { MockAuthService } from './MockAuthService';
 import { AnsibleConfig } from '@ansible/backstage-rhaap-common';
 import { appType } from './constants';
+import { mockAnsibleService } from './mockIAAPService';
 
 describe('ansible:content:create', () => {
   const config = new ConfigReader({
@@ -67,11 +67,6 @@ describe('ansible:content:create', () => {
   });
 
   const logger = mockServices.logger.mock();
-
-  const auth = new MockAuthService({
-    pluginId: 'test',
-    disableDefaultAuthPolicy: false,
-  });
 
   const ansibleConfig: AnsibleConfig = {
     rhaap: {
@@ -100,7 +95,11 @@ describe('ansible:content:create', () => {
     },
   };
 
-  const action = createAnsibleContentAction(config, auth, ansibleConfig);
+  const action = createAnsibleContentAction(
+    config,
+    ansibleConfig,
+    mockAnsibleService,
+  );
 
   const mockContext = createMockActionContext({
     input: {

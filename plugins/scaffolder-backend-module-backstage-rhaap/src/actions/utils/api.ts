@@ -14,18 +14,14 @@
  * limitations under the License.
  */
 
-import { HostDiscovery } from '@backstage/backend-defaults/discovery';
 import { Config } from '@backstage/config';
 import * as fs from 'fs';
 import fetch, { Response } from 'node-fetch';
-import https from 'https';
-import { AuthService, LoggerService } from '@backstage/backend-plugin-api';
-
-export interface AAPSubscriptionCheck {
-  status: number;
-  isValid: boolean;
-  isCompliant: boolean;
-}
+import { LoggerService } from '@backstage/backend-plugin-api';
+import {
+  AAPSubscriptionCheck,
+  IAAPService,
+} from '@ansible/backstage-rhaap-common';
 
 export interface AnsibleApi {
   isValidSubscription(): Promise<AAPSubscriptionCheck>;
@@ -227,58 +223,26 @@ export class BackendServiceAPI {
 export class AnsibleApiClient implements AnsibleApi {
   private readonly config: Config;
   private readonly logger: LoggerService;
-  private readonly auth: AuthService;
+  private readonly ansibleService: IAAPService;
 
   constructor({
     config,
     logger,
-    auth,
+    ansibleService,
   }: {
     config: Config;
     logger: LoggerService;
-    auth: AuthService;
+    ansibleService: IAAPService;
   }) {
     this.config = config;
     this.logger = logger;
-    this.auth = auth;
+    this.ansibleService = ansibleService;
   }
 
   async isValidSubscription(): Promise<AAPSubscriptionCheck> {
-    const discovery = HostDiscovery.fromConfig(this.config);
-    try {
-      const baseUrl = await discovery.getBaseUrl('backstage-rhaap');
-      this.logger.info(
-        `[${BackendServiceAPI.pluginLogName}] Scaffolder checking AAP subscription at ${baseUrl}/aap/subscription`,
-      );
-      const agent = new https.Agent({
-        rejectUnauthorized: true,
-      });
-      const { token } = await this.auth.getPluginRequestToken({
-        onBehalfOf: await this.auth.getOwnServiceCredentials(),
-        targetPluginId: 'backstage-rhaap', // e.g. 'catalog'
-      });
-      if (!token) throw new Error('Authentication token missing');
-      const response = await fetch(`${baseUrl}/aap/subscription`, {
-        headers: { Authorization: `Bearer ${token}` },
-        agent,
-      });
-      const data = await response.json();
-      this.logger.info(
-        `[${BackendServiceAPI.pluginLogName}] Scaffolder AAP subscription check succeeded`,
-      );
-      return data;
-    } catch (error: any) {
-      if (error instanceof Error) {
-        this.logger.error(
-          `[${BackendServiceAPI.pluginLogName}] Scaffolder AAP Error checking AAP subscription:`,
-          error,
-        );
-      } else {
-        this.logger.error(
-          `[${BackendServiceAPI.pluginLogName}] Scaffolder AAP Error checking AAP subscription`,
-        );
-      }
-      return { status: 500, isValid: false, isCompliant: false };
-    }
+    this.logger.info(
+      `[${BackendServiceAPI.pluginLogName}] Scaffolder checking AAP subscription at ${this.config.getString('ansible.rhaap.baseUrl')}/aap/subscription`,
+    );
+    return this.ansibleService.checkSubscription();
   }
 }

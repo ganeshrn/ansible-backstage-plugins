@@ -15,7 +15,10 @@
  */
 
 import { createTemplateAction } from '@backstage/plugin-scaffolder-node';
-import { ansibleCreatorRun } from './ansibleContentCreate';
+import {
+  ansibleCreatorRun,
+  handleDevfileProject,
+} from './ansibleContentCreate';
 import {
   validateAnsibleConfig,
   getServiceUrlFromAnsibleConfig,
@@ -25,15 +28,13 @@ import {
 import { Config } from '@backstage/config';
 import { AnsibleApiClient, BackendServiceAPI } from './utils/api';
 import { ScaffolderLogger } from './utils/logger';
-import { AuthService } from '@backstage/backend-plugin-api';
-import { AnsibleConfig } from '@ansible/backstage-rhaap-common';
-import { handleDevfileProject } from './ansibleContentCreate';
+import { AnsibleConfig, IAAPService } from '@ansible/backstage-rhaap-common';
 import { appType } from './constants';
 
 export function createAnsibleContentAction(
   config: Config,
-  auth: AuthService,
   ansibleConfig: AnsibleConfig,
+  ansibleServiceRef: IAAPService,
 ) {
   return createTemplateAction<{
     sourceControl: string;
@@ -134,7 +135,11 @@ export function createAnsibleContentAction(
       } = input;
 
       const log = new ScaffolderLogger(BackendServiceAPI.pluginLogName, logger);
-      const AAPSubscription = new AnsibleApiClient({ config, logger, auth });
+      const AAPSubscription = new AnsibleApiClient({
+        config: config,
+        logger: logger,
+        ansibleService: ansibleServiceRef,
+      });
 
       try {
         log.info(`Checking for Ansible Automation Platform subscription`);

@@ -44,7 +44,9 @@ export class AnsibleApiClient implements AnsibleApi {
   }
 
   async isValidSubscription(): Promise<AAPSubscriptionCheck> {
-    const baseUrl = await this.discoveryApi.getBaseUrl('backstage-rhaap');
+    const baseUrl = await this.discoveryApi.getBaseUrl(
+      'backstage-rhaap-common',
+    );
     try {
       const response = await this.fetchApi.fetch(`${baseUrl}/aap/subscription`);
       const data = await response.json();

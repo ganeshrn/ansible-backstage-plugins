@@ -74,7 +74,7 @@ export const cleanUp = (ansibleServiceRef: IAAPService) => {
         throw error;
       }
 
-      await ansibleServiceRef.setLogger(logger);
+      ansibleServiceRef.setLogger(logger);
       try {
         await ansibleServiceRef.cleanUp(
           {

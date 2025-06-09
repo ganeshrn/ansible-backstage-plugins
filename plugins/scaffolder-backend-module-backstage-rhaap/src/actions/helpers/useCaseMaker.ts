@@ -55,7 +55,7 @@ export class UseCaseMaker {
   private ansibleConfig: AnsibleConfig;
   private readonly useCases: UseCase[];
   private showCaseFolder: string;
-  private token: string;
+  private token: string | null;
   private octokit: Octokit;
   private scmIntegration:
     | GithubIntegrationConfig
@@ -77,11 +77,11 @@ export class UseCaseMaker {
     organization: Organization | null;
     logger: LoggerService;
     useCases: UseCase[];
-    token: string;
+    token: string | null;
   }) {
     this.ansibleConfig = ansibleConfig;
     this.logger = logger;
-    this.token = token;
+    this.token = token ?? null;
     this.scmType = scmType;
     if (organization) {
       this.organization = organization;
@@ -1329,7 +1329,6 @@ export class UseCaseMaker {
       );
 
       const defaultBranch = repoData.default_branch;
-      this.logger.info(defaultBranch);
 
       // Step 2: Get the reference for the default branch (to create a new branch)
       const { data: refData } = await octokit.request(
@@ -1340,7 +1339,6 @@ export class UseCaseMaker {
           branch: defaultBranch,
         },
       );
-      this.logger.info(refData.object.sha);
 
       // Create a new branch (use the current timestamp to ensure uniqueness)
       if (!refData || !refData.object || !refData.object.sha) {
@@ -1389,7 +1387,6 @@ export class UseCaseMaker {
         // If the file doesn't exist, shaValue will remain undefined
         shaValue = undefined;
       }
-      this.logger.info('result is here');
 
       await octokit.request('PUT /repos/{owner}/{repo}/contents/{path}', {
         owner,

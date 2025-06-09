@@ -70,7 +70,7 @@ export const createShowCases = (
         error.stack = '';
         throw error;
       }
-      await ansibleServiceRef.setLogger(logger);
+      ansibleServiceRef.setLogger(logger);
       const useCaseMaker = new UseCaseMaker({
         ansibleConfig: ansibleConfig,
         logger: logger,

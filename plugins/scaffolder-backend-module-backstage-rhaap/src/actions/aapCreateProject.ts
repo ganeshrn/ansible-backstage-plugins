@@ -123,7 +123,7 @@ export const createProjectAction = (ansibleServiceRef: IAAPService) => {
         error.stack = '';
         throw error;
       }
-      await ansibleServiceRef.setLogger(logger);
+      ansibleServiceRef.setLogger(logger);
       let projectData;
       try {
         projectData = await ansibleServiceRef.createProject(

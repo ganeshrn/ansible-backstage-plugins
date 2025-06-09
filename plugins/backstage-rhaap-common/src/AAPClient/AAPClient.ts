@@ -1,4 +1,10 @@
-import { LoggerService } from '@backstage/backend-plugin-api';
+import {
+  LoggerService,
+  readSchedulerServiceTaskScheduleDefinitionFromConfig,
+  SchedulerService,
+  SchedulerServiceTaskRunner,
+  SchedulerServiceTaskScheduleDefinition,
+} from '@backstage/backend-plugin-api';
 import { Config } from '@backstage/config';
 
 import * as YAML from 'yaml';
@@ -16,6 +22,12 @@ import {
 } from '../types';
 
 import { getAnsibleConfig } from './utils/config';
+
+export interface AAPSubscriptionCheck {
+  status: number;
+  isValid: boolean;
+  isCompliant: boolean;
+}
 
 export interface IAAPService
   extends Pick<
@@ -40,6 +52,7 @@ export interface IAAPService
     | 'getResourceData'
     | 'getJobTemplatesByName'
     | 'setLogger'
+    | 'checkSubscription'
   > {}
 
 export class AAPClient implements IAAPService {
@@ -49,8 +62,17 @@ export class AAPClient implements IAAPService {
   private readonly proxyAgent: Agent;
   private readonly pluginLogName: string;
   private logger: LoggerService;
+  private hasValidSubscription: boolean = false;
+  private isAAPCompliant: boolean = false;
+  private statusCode: number = 500;
+  private static _instance: AAPClient;
+  private readonly scheduleFn: () => Promise<void> = async () => {};
 
-  constructor(options: { rootConfig: Config; logger: LoggerService }) {
+  constructor(options: {
+    rootConfig: Config;
+    logger: LoggerService;
+    scheduler?: SchedulerService;
+  }) {
     this.pluginLogName = AAPClient.pluginLogName;
     this.config = options.rootConfig;
     this.ansibleConfig = getAnsibleConfig(this.config);
@@ -60,6 +82,55 @@ export class AAPClient implements IAAPService {
         rejectUnauthorized: this.ansibleConfig.rhaap?.checkSSL ?? true,
       },
     });
+    const scheduler = options.scheduler;
+
+    if (AAPClient._instance) return AAPClient._instance;
+
+    this.logger.info(`[${this.pluginLogName}] Setting up the scheduler`);
+
+    const DEFAULT_SCHEDULE = {
+      frequency: { hours: 24 },
+      timeout: { minutes: 1 },
+    };
+    let schedule: SchedulerServiceTaskScheduleDefinition = DEFAULT_SCHEDULE;
+    if (this.config.has('catalog.providers.rhaap.developement.schedule')) {
+      schedule = readSchedulerServiceTaskScheduleDefinitionFromConfig(
+        this.config.getConfig('catalog.providers.rhaap.developement.schedule'),
+      );
+    } else if (this.config.has('catalog.providers.rhaap.production.schedule')) {
+      schedule = readSchedulerServiceTaskScheduleDefinitionFromConfig(
+        this.config.getConfig('catalog.providers.rhaap.production.schedule'),
+      );
+    }
+
+    if (scheduler) {
+      const taskRunner = scheduler.createScheduledTaskRunner(schedule);
+      this.scheduleFn = this.createFn(taskRunner);
+      const clearSubscriptionCheckTimeout = setTimeout(async () => {
+        this.scheduleFn();
+        await this.checkSubscription();
+        clearTimeout(clearSubscriptionCheckTimeout);
+      }, 500);
+    }
+    AAPClient._instance = this;
+  }
+
+  static getInstance(
+    config: Config,
+    logger: LoggerService,
+    scheduler?: SchedulerService,
+  ): AAPClient {
+    return new AAPClient({ rootConfig: config, logger, scheduler });
+  }
+
+  private createFn(taskRunner: SchedulerServiceTaskRunner) {
+    return async () =>
+      taskRunner.run({
+        id: 'backstage-rhaap-subscription-check',
+        fn: async () => {
+          this.checkSubscription();
+        },
+      });
   }
 
   private sleep(ms: number) {
@@ -146,7 +217,7 @@ export class AAPClient implements IAAPService {
 
   public async executeGetRequest(
     endPoint: string,
-    token: string,
+    token: string | null,
     fullUrl?: string,
   ): Promise<any> {
     const url = fullUrl
@@ -678,7 +749,7 @@ export class AAPClient implements IAAPService {
   public async getJobTemplatesByName(
     templateNames: string[],
     organization: Organization,
-    token: string,
+    token: string | null,
   ): Promise<AAPTemplate[]> {
     const endPoint = `api/controller/v2/job_templates/?organization=${organization.id}&name__in=${templateNames}`;
     const response = await this.executeGetRequest(endPoint, token);
@@ -692,5 +763,76 @@ export class AAPClient implements IAAPService {
         return { id: result.id, name: result.name };
       },
     );
+  }
+
+  private async isAAP25Instance(token: string): Promise<boolean> {
+    try {
+      const url = `${this.ansibleConfig.rhaap?.baseUrl}/api/gateway/v1/ping/`;
+      this.logger.info(`[${this.pluginLogName}] Pinging api gateway at ${url}`);
+      const response = await this.executeGetRequest(
+        'api/gateway/v1/ping/',
+        token,
+      );
+      return response.ok;
+    } catch (error) {
+      this.logger.error(
+        `[${this.pluginLogName}] Error checking AAP version: ${error}`,
+      );
+      return false;
+    }
+  }
+
+  public async checkSubscription(): Promise<AAPSubscriptionCheck> {
+    try {
+      const token = this.config.getString('ansible.rhaap.token');
+      const isAAP25 = await this.isAAP25Instance(token);
+      const endpoint = isAAP25 ? 'api/controller/v2/config' : 'api/v2/config';
+      this.logger.info(
+        `[${this.pluginLogName}] Checking AAP subscription at ${this.ansibleConfig.rhaap?.baseUrl}/${endpoint}`,
+      );
+
+      const response = await this.executeGetRequest(endpoint, token);
+      const data = await response.json();
+
+      this.statusCode = response.status;
+      this.hasValidSubscription = ['enterprise', 'developer', 'trial'].includes(
+        data?.license_info?.license_type,
+      );
+
+      this.isAAPCompliant = data?.license_info?.compliant ?? false;
+
+      if (this.hasValidSubscription && this.isAAPCompliant) {
+        this.logger.info(
+          `[${this.pluginLogName}] AAP Subscription Check complete. Subscription is Valid.`,
+        );
+      }
+
+      return {
+        status: this.statusCode,
+        isValid: this.hasValidSubscription,
+        isCompliant: this.isAAPCompliant,
+      };
+    } catch (error: any) {
+      this.logger.error(
+        `[${this.pluginLogName}] AAP subscription check failed: ${error}`,
+      );
+
+      if (error.code === 'CERT_HAS_EXPIRED') {
+        this.statusCode = 495;
+      } else if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
+        this.statusCode = 404;
+      } else {
+        this.statusCode =
+          Number.isInteger(error.code) && error.code >= 100 && error.code < 600
+            ? error.code
+            : 500;
+      }
+
+      return {
+        status: this.statusCode,
+        isValid: false,
+        isCompliant: false,
+      };
+    }
   }
 }

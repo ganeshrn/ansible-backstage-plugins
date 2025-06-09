@@ -80,6 +80,30 @@ describe('AAPClient', () => {
 
     mockConfig = {
       getOptionalConfig: jest.fn(),
+      getOptionalString: jest.fn().mockImplementation((path: string) => {
+        const paths: Record<string, string> = {
+          'ansible.rhaap.token': 'test-token',
+          'ansible.rhaap.baseUrl': 'https://test.example.com',
+          'ansible.rhaap..type': 'file',
+          'ansible.rhaap..target': 'test-target',
+          'ansible.rhaap..gitBranch': 'main',
+          'ansible.rhaap..gitUser': 'test-user',
+          'ansible.rhaap..gitEmail': 'test@example.com',
+          'ansible.creatorService.baseUrl': 'localhost',
+          'ansible.creatorService.port': '8000',
+        };
+        return paths[path];
+      }),
+      getString: jest.fn().mockImplementation((path: string) => {
+        const paths: Record<string, string> = {
+          'ansible.rhaap.token': 'test-token',
+          'ansible.rhaap.baseUrl': 'https://test.example.com',
+        };
+        if (!paths[path]) {
+          throw new Error(`No value found for config key: ${path}`);
+        }
+        return paths[path];
+      }),
       getConfig: jest.fn().mockImplementation((key: string) => {
         if (key === 'ansible') {
           return {
@@ -122,9 +146,125 @@ describe('AAPClient', () => {
             }),
           };
         }
+        if (
+          key === 'catalog.providers.rhaap.developement.schedule' ||
+          key === 'catalog.providers.rhaap.production.schedule'
+        ) {
+          const scheduleConfig = {
+            get: jest.fn().mockImplementation((scheduleKey: string) => {
+              if (scheduleKey === 'frequency') {
+                return { hours: 12 };
+              }
+              if (scheduleKey === 'timeout') {
+                return { minutes: 30 };
+              }
+              return undefined;
+            }),
+            getOptional: jest.fn().mockImplementation((scheduleKey: string) => {
+              if (scheduleKey === 'frequency') {
+                return { hours: 12 };
+              }
+              if (scheduleKey === 'timeout') {
+                return { minutes: 30 };
+              }
+              return undefined;
+            }),
+            getOptionalString: jest
+              .fn()
+              .mockImplementation((scheduleKey: string) => {
+                if (scheduleKey === 'frequency') {
+                  return '12h';
+                }
+                if (scheduleKey === 'timeout') {
+                  return '30m';
+                }
+                return undefined;
+              }),
+            getConfig: jest.fn().mockImplementation((scheduleKey: string) => {
+              if (scheduleKey === 'frequency' || scheduleKey === 'timeout') {
+                return {
+                  get: jest.fn().mockImplementation((durationKey: string) => {
+                    if (scheduleKey === 'frequency') {
+                      return durationKey === 'hours' ? 12 : undefined;
+                    }
+                    if (scheduleKey === 'timeout') {
+                      return durationKey === 'minutes' ? 30 : undefined;
+                    }
+                    return undefined;
+                  }),
+                  getOptional: jest
+                    .fn()
+                    .mockImplementation((durationKey: string) => {
+                      if (scheduleKey === 'frequency') {
+                        return durationKey === 'hours' ? 12 : undefined;
+                      }
+                      if (scheduleKey === 'timeout') {
+                        return durationKey === 'minutes' ? 30 : undefined;
+                      }
+                      return undefined;
+                    }),
+                  getOptionalNumber: jest
+                    .fn()
+                    .mockImplementation((durationKey: string) => {
+                      if (scheduleKey === 'frequency') {
+                        return durationKey === 'hours' ? 12 : undefined;
+                      }
+                      if (scheduleKey === 'timeout') {
+                        return durationKey === 'minutes' ? 30 : undefined;
+                      }
+                      return undefined;
+                    }),
+                  getOptionalString: jest
+                    .fn()
+                    .mockImplementation((durationKey: string) => {
+                      if (scheduleKey === 'frequency') {
+                        return durationKey === 'hours' ? '12h' : undefined;
+                      }
+                      if (scheduleKey === 'timeout') {
+                        return durationKey === 'minutes' ? '30m' : undefined;
+                      }
+                      return undefined;
+                    }),
+                  has: jest.fn().mockImplementation((durationKey: string) => {
+                    if (scheduleKey === 'frequency') {
+                      return durationKey === 'hours';
+                    }
+                    if (scheduleKey === 'timeout') {
+                      return durationKey === 'minutes';
+                    }
+                    return false;
+                  }),
+                  keys: jest.fn().mockImplementation(() => {
+                    if (scheduleKey === 'frequency') {
+                      return ['hours'];
+                    }
+                    if (scheduleKey === 'timeout') {
+                      return ['minutes'];
+                    }
+                    return [];
+                  }),
+                };
+              }
+              return {};
+            }),
+            has: jest.fn().mockImplementation((scheduleKey: string) => {
+              return ['frequency', 'timeout'].includes(scheduleKey);
+            }),
+            keys: jest.fn().mockReturnValue(['frequency', 'timeout']),
+          };
+          return scheduleConfig;
+        }
         return mockAnsibleConfig;
       }),
-      has: jest.fn().mockReturnValue(true),
+      has: jest.fn().mockImplementation((key: string) => {
+        return [
+          'rhaap.baseUrl',
+          'rhaap.token',
+          'rhaap.checkSSL',
+          'analytics.enabled',
+          'catalog.providers.rhaap.developement.schedule',
+        ].includes(key);
+      }),
       keys: jest.fn().mockReturnValue([]),
     } as unknown as Config;
 
@@ -788,6 +928,130 @@ describe('AAPClient', () => {
         );
       });
     });
+
+    describe('deleteExecutionEnvironmentExists', () => {
+      beforeEach(() => {
+        jest.clearAllMocks();
+      });
+
+      it('should delete execution environment when it exists', async () => {
+        const mockGetResponse = {
+          ok: true,
+          json: jest.fn().mockResolvedValue({
+            results: [
+              {
+                id: 123,
+                name: 'test-env',
+              },
+            ],
+          }),
+        };
+        const mockDeleteResponse = {
+          ok: true,
+        };
+
+        mockFetch
+          .mockResolvedValueOnce(mockGetResponse)
+          .mockResolvedValueOnce(mockDeleteResponse);
+
+        const deletePromise = client.deleteExecutionEnvironmentExists(
+          'test-env',
+          'test-token',
+        );
+
+        await deletePromise;
+
+        expect(mockFetch).toHaveBeenNthCalledWith(
+          1,
+          'https://test.example.com/api/controller/v2/execution_environments/?name=test-env',
+          expect.objectContaining({
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: 'Bearer test-token',
+            },
+          }),
+        );
+
+        expect(mockFetch).toHaveBeenNthCalledWith(
+          2,
+          'https://test.example.com/api/controller/v2/execution_environments/123/',
+          expect.objectContaining({
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: 'Bearer test-token',
+            },
+          }),
+        );
+      });
+
+      it('should not delete execution environment when it does not exist', async () => {
+        const mockGetResponse = {
+          ok: true,
+          json: jest.fn().mockResolvedValue({
+            results: [],
+          }),
+        };
+        mockFetch.mockResolvedValueOnce(mockGetResponse);
+
+        const deletePromise = client.deleteExecutionEnvironmentExists(
+          'test-env',
+          'test-token',
+        );
+
+        await deletePromise;
+
+        expect(mockFetch).toHaveBeenCalledWith(
+          'https://test.example.com/api/controller/v2/execution_environments/?name=test-env',
+          expect.objectContaining({
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: 'Bearer test-token',
+            },
+          }),
+        );
+
+        expect(mockFetch).not.toHaveBeenCalledWith(
+          expect.stringContaining('/api/controller/v2/execution_environments/'),
+          expect.objectContaining({ method: 'DELETE' }),
+        );
+      });
+
+      it('should handle errors when deleting environment', async () => {
+        const mockGetResponse = {
+          ok: true,
+          json: jest.fn().mockResolvedValue({
+            results: [
+              {
+                id: 123,
+                name: 'test-env',
+              },
+            ],
+          }),
+        };
+        mockFetch.mockResolvedValueOnce(mockGetResponse);
+
+        mockFetch.mockRejectedValueOnce(new Error('Delete failed'));
+
+        await expect(
+          client.deleteExecutionEnvironmentExists('test-env', 'test-token'),
+        ).rejects.toThrow('Failed to send delete: Delete failed');
+
+        expect(mockFetch).toHaveBeenCalledTimes(2);
+        expect(mockFetch).toHaveBeenNthCalledWith(
+          1,
+          'https://test.example.com/api/controller/v2/execution_environments/?name=test-env',
+          expect.objectContaining({ method: 'GET' }),
+        );
+        expect(mockFetch).toHaveBeenNthCalledWith(
+          2,
+          'https://test.example.com/api/controller/v2/execution_environments/123/',
+          expect.objectContaining({ method: 'DELETE' }),
+        );
+      });
+    });
   });
 
   describe('Utility Methods', () => {
@@ -905,6 +1169,85 @@ describe('AAPClient', () => {
 
         client.executeGetRequest('test', 'token');
         expect(newLogger.info).toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe('checkSubscription', () => {
+    it('should return valid subscription status for AAP 2.5+', async () => {
+      mockFetch.mockResolvedValueOnce({ ok: true });
+
+      const mockResponse = {
+        ok: true,
+        status: 200,
+        json: jest.fn().mockResolvedValue({
+          license_info: {
+            license_type: 'enterprise',
+            compliant: true,
+          },
+        }),
+      };
+      mockFetch.mockResolvedValueOnce(mockResponse);
+
+      const result = await client.checkSubscription();
+
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        2,
+        'https://test.example.com/api/controller/v2/config',
+        expect.any(Object),
+      );
+      expect(result).toEqual({
+        status: 200,
+        isValid: true,
+        isCompliant: true,
+      });
+    });
+
+    it('should return valid subscription status for AAP < 2.5', async () => {
+      mockFetch.mockResolvedValueOnce({ ok: false });
+
+      const mockResponse = {
+        ok: true,
+        status: 200,
+        json: jest.fn().mockResolvedValue({
+          license_info: {
+            license_type: 'enterprise',
+            compliant: true,
+          },
+        }),
+      };
+      mockFetch.mockResolvedValueOnce(mockResponse);
+
+      const result = await client.checkSubscription();
+
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        2,
+        'https://test.example.com/api/v2/config',
+        expect.any(Object),
+      );
+      expect(result).toEqual({
+        status: 200,
+        isValid: true,
+        isCompliant: true,
+      });
+    });
+
+    it('should handle generic errors', async () => {
+      mockFetch.mockResolvedValueOnce({ ok: true });
+
+      const error = new Error('Generic error');
+      mockFetch.mockRejectedValueOnce(error);
+
+      jest
+        .spyOn(client as any, 'executeGetRequest')
+        .mockRejectedValueOnce(error);
+
+      const result = await client.checkSubscription();
+
+      expect(result).toEqual({
+        status: 500,
+        isValid: false,
+        isCompliant: false,
       });
     });
   });

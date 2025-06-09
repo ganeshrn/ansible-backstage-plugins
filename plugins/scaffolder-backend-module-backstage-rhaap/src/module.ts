@@ -56,7 +56,6 @@ export const scaffolderModuleAnsible = createBackendModule({
         scaffolder: scaffolderActionsExtensionPoint,
         config: coreServices.rootConfig,
         logger: coreServices.logger,
-        auth: coreServices.auth,
         scaffolderTemplating: scaffolderTemplatingExtensionPoint,
         autocomplete: scaffolderAutocompleteExtensionPoint,
         ansibleService: ansibleServiceRef,
@@ -65,14 +64,13 @@ export const scaffolderModuleAnsible = createBackendModule({
         scaffolder,
         config,
         logger,
-        auth,
         scaffolderTemplating,
         autocomplete,
         ansibleService,
       }) {
         const ansibleConfig = getAnsibleConfig(config);
         scaffolder.addActions(
-          createAnsibleContentAction(config, auth, ansibleConfig),
+          createAnsibleContentAction(config, ansibleConfig, ansibleService),
           createProjectAction(ansibleService),
           createExecutionEnvironment(ansibleService),
           createJobTemplate(ansibleService),

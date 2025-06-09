@@ -171,7 +171,7 @@ export const launchJobTemplate = (ansibleServiceRef: IAAPService) => {
         error.stack = '';
         throw error;
       }
-      await ansibleServiceRef.setLogger(logger);
+      ansibleServiceRef.setLogger(logger);
       let jobResult;
       try {
         jobResult = await ansibleServiceRef.launchJobTemplate(
