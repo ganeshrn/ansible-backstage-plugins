@@ -46,5 +46,30 @@ export async function createRouter(options: {
     response.status(200).json(res);
   });
 
+  router.post('/aap/create_user', async (request, response) => {
+    const { username, userID } = request.body;
+    if (!username || userID === undefined || userID === null) {
+      response
+        .status(400)
+        .json({ error: 'Missing username and user id in request body.' });
+      return;
+    }
+
+    logger.info(`Creating user ${username} in catalog`);
+    try {
+      const res = await aapEntityProvider.createSingleUser(username, userID);
+      response
+        .status(200)
+        .json({ success: true, user: username, created: res });
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      logger.error(`Failed to create user ${username}: ${errorMessage}`);
+      response
+        .status(500)
+        .json({ error: `Failed to create user: ${errorMessage}` });
+    }
+  });
+
   return router;
 }

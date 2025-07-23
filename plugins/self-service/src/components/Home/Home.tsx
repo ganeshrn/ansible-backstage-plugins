@@ -153,8 +153,8 @@ export const HomeComponent = () => {
           <>
             <div>
               <span className={classes.header_subtitle}>
-                Browse through automation template. Upon launching a template, a
-                new job will be created and executed in AAP.
+                Browse available templates. Templates provide step-by-step
+                guidance to perform a task.
               </span>
             </div>
             {allowed && (

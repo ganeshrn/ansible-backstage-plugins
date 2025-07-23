@@ -16,7 +16,7 @@
 import * as os from 'os';
 import { executeShellCommand } from '@backstage/plugin-scaffolder-node';
 import { BackendServiceAPI } from './utils/api';
-import { promises as fs } from 'fs';
+import * as fs from 'fs/promises';
 import { UseCaseMaker } from './helpers';
 import { AnsibleConfig } from '@ansible/backstage-rhaap-common';
 import { appType } from './constants';

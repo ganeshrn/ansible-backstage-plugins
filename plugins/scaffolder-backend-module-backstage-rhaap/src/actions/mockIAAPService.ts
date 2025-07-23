@@ -28,4 +28,6 @@ export const mockAnsibleService: jest.Mocked<IAAPService> = {
   getTeamsByUserId: jest.fn(),
   getUserRoleAssignments: jest.fn(),
   syncJobTemplates: jest.fn(),
+  getOrgsByUserId: jest.fn(),
+  getUserInfoById: jest.fn(),
 };

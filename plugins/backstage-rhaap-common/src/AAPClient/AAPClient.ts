@@ -61,6 +61,8 @@ export interface IAAPService
     | 'getTeamsByUserId'
     | 'getUserRoleAssignments'
     | 'syncJobTemplates'
+    | 'getOrgsByUserId'
+    | 'getUserInfoById'
   > {}
 
 export class AAPClient implements IAAPService {
@@ -905,6 +907,7 @@ export class AAPClient implements IAAPService {
     }
     const userDataJson = (await response.json()) as {
       results: {
+        id: number;
         username: string;
         email: string;
         first_name: string;
@@ -925,6 +928,7 @@ export class AAPClient implements IAAPService {
     }
     return {
       provider: 'AAP oauth2',
+      id: userData.id ? userData.id.toString() : '',
       username: userData.username,
       email: userData.email,
       displayName: `${userData?.first_name ? userData.first_name : ''} ${userData?.last_name ? userData.last_name : ''}`,
@@ -960,7 +964,7 @@ export class AAPClient implements IAAPService {
       users: User[];
     }>
   > {
-    const orgEndPoint = 'api/controller/v2/organizations/';
+    const orgEndPoint = 'api/gateway/v1/organizations/';
     try {
       const token = this.ansibleConfig.rhaap?.token ?? null;
       let urlSearchParams = new URLSearchParams();
@@ -1069,17 +1073,23 @@ export class AAPClient implements IAAPService {
   }
 
   public async listSystemUsers(): Promise<Users> {
-    const endPoint = 'api/controller/v2/users/?is_superuser=true';
+    const endPoint = 'api/gateway/v1/users/?is_superuser=true';
     const token = this.ansibleConfig.rhaap?.token ?? null;
     this.logger.info(`Fetching users from RH AAP.`);
     const users = (await this.executeCatalogRequest(endPoint, token)) as Users;
     return users;
   }
 
-  public async getTeamsByUserId(
-    userID: number,
-  ): Promise<{ name: string; groupName: string; id: number; orgId: number }[]> {
-    const endPoint = `api/controller/v2/users/${userID}/teams/`;
+  public async getTeamsByUserId(userID: number): Promise<
+    {
+      name: string;
+      groupName: string;
+      id: number;
+      orgId: number;
+      orgName: string;
+    }[]
+  > {
+    const endPoint = `api/gateway/v1/users/${userID}/teams/`;
     const token = this.ansibleConfig.rhaap?.token ?? null;
     this.logger.info(`Fetching teams for user ID: ${userID} from RH AAP.`);
     const urlSearchParams = new URLSearchParams();
@@ -1095,11 +1105,52 @@ export class AAPClient implements IAAPService {
         groupName: this.formatNameSpace(team.name),
         id: team.id,
         orgId: team.organization,
+        orgName: team.summary_fields.organization.name,
       }));
   }
 
+  public async getOrgsByUserId(
+    userID: number,
+  ): Promise<{ name: string; groupName: string }[]> {
+    const endPoint = `/api/gateway/v1/users/${userID}/organizations/`;
+    const token = this.ansibleConfig.rhaap?.token ?? null;
+    this.logger.info(`Fetching orgs for user ID: ${userID} from RH AAP.`);
+    const urlSearchParams = new URLSearchParams();
+    urlSearchParams.set('page_size', '200');
+    const orgs = await this.executeCatalogRequest(
+      `${endPoint}?${decodeURIComponent(urlSearchParams.toString())}`,
+      token,
+    );
+    return orgs
+      .filter((org: any) => org?.name)
+      .map((org: any) => ({
+        name: org.name,
+        groupName: this.formatNameSpace(org.name),
+      }));
+  }
+
+  public async getUserInfoById(userID: number): Promise<User> {
+    const endPoint = `/api/gateway/v1/users/${userID}/`;
+    const token = this.ansibleConfig.rhaap?.token ?? null;
+    this.logger.info(`Fetching user details for ID: ${userID} from RH AAP.`);
+    const userResponse: any = await this.executeGetRequest(endPoint, token);
+    const userJson = await userResponse.json();
+    this.logger.info(`User information ${JSON.stringify(userJson)}`);
+
+    return {
+      id: userJson.id,
+      url: userJson.url,
+      username: userJson.username,
+      email: userJson.email || '',
+      first_name: userJson.first_name || '',
+      last_name: userJson.last_name || '',
+      is_superuser: userJson.is_superuser || false,
+      is_orguser: true,
+    };
+  }
+
   public async getUserRoleAssignments(): Promise<RoleAssignments> {
-    const endPoint = 'api/controller/v2/role_user_assignments/';
+    const endPoint = 'api/gateway/v1/role_user_assignments/';
     const token = this.ansibleConfig.rhaap?.token ?? null;
     this.logger.info(`Fetching role assignments from RH AAP.`);
     const roles = await this.executeCatalogRequest(endPoint, token);

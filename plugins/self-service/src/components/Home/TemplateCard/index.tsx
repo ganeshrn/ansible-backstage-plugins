@@ -60,10 +60,16 @@ export function WizardCard({ template }: { template: TemplateEntityV1beta3 }) {
             }}
             data-testid="template--description"
           >
-            {template?.metadata?.description}
+            {(template?.metadata?.description?.trim().length &&
+              template?.metadata?.description) || (
+              <Typography style={{ color: 'rgba(119, 119, 109, 1)' }}>
+                No description available
+              </Typography>
+            )}
           </Typography>
         </div>
-        {template?.metadata?.tags?.length && (
+        <Divider />
+        {(template?.metadata?.tags ?? []).length > 0 && (
           <div className="tags" data-testid="template--tags">
             <div style={{ marginTop: 8 }}>
               {template?.metadata?.tags?.map((tag, index) => (

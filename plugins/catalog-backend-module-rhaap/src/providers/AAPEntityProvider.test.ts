@@ -316,20 +316,40 @@ describe('AAPEntityProvider', () => {
       },
     ]);
 
-    mockAnsibleService.getTeamsByUserId.mockImplementation((userId: number) => {
-      if (userId === 1) {
-        return Promise.resolve([
-          { name: 'Team A', groupName: 'team-a', id: 1, orgId: 1 },
-          { name: 'Team B', groupName: 'team-b', id: 2, orgId: 1 },
-        ]);
-      }
-      if (userId === 2) {
-        return Promise.resolve([
-          { name: 'Team B', groupName: 'team-b', id: 2, orgId: 1 },
-        ]);
-      }
-      return Promise.resolve([]);
-    });
+    mockAnsibleService.getTeamsByUserId.mockImplementation(
+      (_userId: number) => {
+        if (_userId === 1) {
+          return Promise.resolve([
+            {
+              name: 'Team A',
+              groupName: 'team-a',
+              id: 1,
+              orgId: 1,
+              orgName: 'Default',
+            },
+            {
+              name: 'Team B',
+              groupName: 'team-b',
+              id: 2,
+              orgId: 1,
+              orgName: 'Default',
+            },
+          ]);
+        }
+        if (_userId === 2) {
+          return Promise.resolve([
+            {
+              name: 'Team B',
+              groupName: 'team-b',
+              id: 2,
+              orgId: 1,
+              orgName: 'Default',
+            },
+          ]);
+        }
+        return Promise.resolve([]);
+      },
+    );
 
     const schedule = new PersistingTaskRunner();
     const entityProviderConnection: EntityProviderConnection = {
@@ -366,6 +386,413 @@ describe('AAPEntityProvider', () => {
   it('test', async () => {
     const result = await expectMutation();
     expect(result).toBe(true);
+  });
+
+  describe('createSingleUser', () => {
+    let provider: AAPEntityProvider;
+    let mockConnection: EntityProviderConnection;
+
+    beforeEach(() => {
+      const config = new ConfigReader(MOCK_CONFIG.data);
+      const logger = mockServices.logger.mock();
+      const schedule = new PersistingTaskRunner();
+
+      provider = AAPEntityProvider.fromConfig(config, mockAnsibleService, {
+        schedule,
+        logger,
+      })[0];
+
+      mockConnection = {
+        applyMutation: jest.fn(),
+        refresh: jest.fn(),
+      };
+
+      provider.connect(mockConnection);
+    });
+
+    it('should successfully create user in configured organization', async () => {
+      const username = 'testuser';
+      const userID = 123;
+
+      mockAnsibleService.getOrgsByUserId.mockResolvedValue([
+        { name: 'Default', groupName: 'default' },
+      ]);
+
+      mockAnsibleService.getUserInfoById.mockResolvedValue({
+        id: 123,
+        username: 'testuser',
+        email: 'test@example.com',
+        first_name: 'Test',
+        last_name: 'User',
+        is_superuser: false,
+        is_orguser: true,
+        url: 'https://test.example.com/users/123',
+      });
+
+      mockAnsibleService.getTeamsByUserId.mockResolvedValue([
+        {
+          name: 'Team A',
+          groupName: 'team-a',
+          id: 1,
+          orgId: 1,
+          orgName: 'Default',
+        },
+      ]);
+
+      const result = await provider.createSingleUser(username, userID);
+
+      expect(result).toBe(true);
+      expect(mockAnsibleService.getOrgsByUserId).toHaveBeenCalledWith(userID);
+      expect(mockAnsibleService.getUserInfoById).toHaveBeenCalledWith(userID);
+      expect(mockAnsibleService.getTeamsByUserId).toHaveBeenCalledWith(userID);
+      expect(mockConnection.applyMutation).toHaveBeenCalledWith({
+        type: 'delta',
+        added: [
+          {
+            entity: expect.objectContaining({
+              kind: 'User',
+              metadata: expect.objectContaining({
+                name: 'testuser',
+              }),
+              spec: expect.objectContaining({
+                memberOf: ['Team A', 'default'],
+              }),
+            }),
+            locationKey: 'AapEntityProvider:development',
+          },
+        ],
+        removed: [],
+      });
+    });
+
+    it('should successfully create superuser not in configured organizations', async () => {
+      const username = 'admin';
+      const userID = 456;
+
+      mockAnsibleService.getOrgsByUserId.mockResolvedValue([
+        { name: 'Other Org', groupName: 'other-org' },
+      ]);
+
+      mockAnsibleService.getUserInfoById.mockResolvedValue({
+        id: 456,
+        username: 'admin',
+        email: 'admin@example.com',
+        first_name: 'Admin',
+        last_name: 'User',
+        is_superuser: true,
+        is_orguser: false,
+        url: 'https://test.example.com/users/456',
+      });
+
+      mockAnsibleService.getTeamsByUserId.mockResolvedValue([]);
+
+      const result = await provider.createSingleUser(username, userID);
+
+      expect(result).toBe(true);
+      expect(mockConnection.applyMutation).toHaveBeenCalledWith({
+        type: 'delta',
+        added: [
+          {
+            entity: expect.objectContaining({
+              kind: 'User',
+              metadata: expect.objectContaining({
+                name: 'admin',
+              }),
+              spec: expect.objectContaining({
+                memberOf: [],
+              }),
+            }),
+            locationKey: 'AapEntityProvider:development',
+          },
+        ],
+        removed: [],
+      });
+    });
+
+    it('should fail when connection is not initialized', async () => {
+      const uninitializedProvider = AAPEntityProvider.fromConfig(
+        new ConfigReader(MOCK_CONFIG.data),
+        mockAnsibleService,
+        {
+          schedule: new PersistingTaskRunner(),
+          logger: mockServices.logger.mock(),
+        },
+      )[0];
+
+      await expect(
+        uninitializedProvider.createSingleUser('testuser', 123),
+      ).rejects.toThrow('Not initialized');
+    });
+
+    it('should fail when user details cannot be fetched', async () => {
+      const username = 'testuser';
+      const userID = 123;
+
+      mockAnsibleService.getOrgsByUserId.mockResolvedValue([
+        { name: 'Default', groupName: 'default' },
+      ]);
+
+      mockAnsibleService.getUserInfoById.mockRejectedValue(
+        new Error('User not found in AAP'),
+      );
+
+      await expect(provider.createSingleUser(username, userID)).rejects.toThrow(
+        'Failed to fetch user details for testuser (ID: 123): User not found in AAP',
+      );
+    });
+
+    it('should fail when user has invalid username', async () => {
+      const username = 'testuser';
+      const userID = 123;
+
+      mockAnsibleService.getOrgsByUserId.mockResolvedValue([
+        { name: 'Default', groupName: 'default' },
+      ]);
+
+      mockAnsibleService.getUserInfoById.mockResolvedValue({
+        id: 123,
+        username: '',
+        email: 'test@example.com',
+        first_name: 'Test',
+        last_name: 'User',
+        is_superuser: false,
+        is_orguser: true,
+        url: 'https://test.example.com/users/123',
+      });
+
+      await expect(provider.createSingleUser(username, userID)).rejects.toThrow(
+        "User testuser (ID: 123) has invalid username: ''",
+      );
+    });
+
+    it('should fail when user is not in configured organizations and not superuser', async () => {
+      const username = 'testuser';
+      const userID = 123;
+
+      mockAnsibleService.getOrgsByUserId.mockResolvedValue([
+        { name: 'Other Org', groupName: 'other-org' },
+      ]);
+
+      mockAnsibleService.getUserInfoById.mockResolvedValue({
+        id: 123,
+        username: 'testuser',
+        email: 'test@example.com',
+        first_name: 'Test',
+        last_name: 'User',
+        is_superuser: false,
+        is_orguser: true,
+        url: 'https://test.example.com/users/123',
+      });
+
+      await expect(provider.createSingleUser(username, userID)).rejects.toThrow(
+        'User testuser (ID: 123) does not belong to any configured organizations: default, is not a member of any teams in those organizations, and is not a system user.',
+      );
+    });
+
+    it('should handle user with no teams', async () => {
+      const username = 'testuser';
+      const userID = 123;
+
+      mockAnsibleService.getOrgsByUserId.mockResolvedValue([
+        { name: 'Default', groupName: 'default' },
+      ]);
+
+      mockAnsibleService.getUserInfoById.mockResolvedValue({
+        id: 123,
+        username: 'testuser',
+        email: 'test@example.com',
+        first_name: 'Test',
+        last_name: 'User',
+        is_superuser: false,
+        is_orguser: true,
+        url: 'https://test.example.com/users/123',
+      });
+
+      mockAnsibleService.getTeamsByUserId.mockResolvedValue([]);
+
+      const result = await provider.createSingleUser(username, userID);
+
+      expect(result).toBe(true);
+      expect(mockConnection.applyMutation).toHaveBeenCalledWith({
+        type: 'delta',
+        added: [
+          {
+            entity: expect.objectContaining({
+              spec: expect.objectContaining({
+                memberOf: ['default'],
+              }),
+            }),
+            locationKey: 'AapEntityProvider:development',
+          },
+        ],
+        removed: [],
+      });
+    });
+
+    it('should filter teams by configured organizations', async () => {
+      const username = 'testuser';
+      const userID = 123;
+
+      mockAnsibleService.getOrgsByUserId.mockResolvedValue([
+        { name: 'Default', groupName: 'default' },
+      ]);
+
+      mockAnsibleService.getUserInfoById.mockResolvedValue({
+        id: 123,
+        username: 'testuser',
+        email: 'test@example.com',
+        first_name: 'Test',
+        last_name: 'User',
+        is_superuser: false,
+        is_orguser: true,
+        url: 'https://test.example.com/users/123',
+      });
+
+      mockAnsibleService.getTeamsByUserId.mockResolvedValue([
+        {
+          name: 'Team A',
+          groupName: 'team-a',
+          id: 1,
+          orgId: 1,
+          orgName: 'Default',
+        },
+        {
+          name: 'Team B',
+          groupName: 'team-b',
+          id: 2,
+          orgId: 2,
+          orgName: 'Other Org',
+        },
+      ]);
+
+      const result = await provider.createSingleUser(username, userID);
+
+      expect(result).toBe(true);
+      expect(mockConnection.applyMutation).toHaveBeenCalledWith({
+        type: 'delta',
+        added: [
+          {
+            entity: expect.objectContaining({
+              spec: expect.objectContaining({
+                memberOf: ['Team A', 'default'],
+              }),
+            }),
+            locationKey: 'AapEntityProvider:development',
+          },
+        ],
+        removed: [],
+      });
+    });
+
+    it('should handle case-insensitive organization matching', async () => {
+      const username = 'testuser';
+      const userID = 123;
+
+      mockAnsibleService.getOrgsByUserId.mockResolvedValue([
+        { name: 'DEFAULT', groupName: 'default' },
+      ]);
+
+      mockAnsibleService.getUserInfoById.mockResolvedValue({
+        id: 123,
+        username: 'testuser',
+        email: 'test@example.com',
+        first_name: 'Test',
+        last_name: 'User',
+        is_superuser: false,
+        is_orguser: true,
+        url: 'https://test.example.com/users/123',
+      });
+
+      mockAnsibleService.getTeamsByUserId.mockResolvedValue([]);
+
+      const result = await provider.createSingleUser(username, userID);
+
+      expect(result).toBe(true);
+      expect(mockConnection.applyMutation).toHaveBeenCalledWith({
+        type: 'delta',
+        added: [
+          {
+            entity: expect.objectContaining({
+              spec: expect.objectContaining({
+                memberOf: ['default'],
+              }),
+            }),
+            locationKey: 'AapEntityProvider:development',
+          },
+        ],
+        removed: [],
+      });
+    });
+
+    it('should create user when user has teams in configured organizations but not direct org membership', async () => {
+      const username = 'teamuser';
+      const userID = 123;
+      const teamMockLogger = mockServices.logger.mock();
+      const teamMockConnection = {
+        applyMutation: jest.fn(),
+        refresh: jest.fn(),
+      };
+
+      mockAnsibleService.getOrgsByUserId.mockResolvedValue([
+        { name: 'Other Org', groupName: 'other-org' },
+      ]);
+
+      mockAnsibleService.getUserInfoById.mockResolvedValue({
+        id: 123,
+        username: 'teamuser',
+        email: 'teamuser@example.com',
+        first_name: 'Team',
+        last_name: 'User',
+        is_superuser: false,
+        url: 'http://example.com/users/123',
+      });
+
+      mockAnsibleService.getTeamsByUserId.mockResolvedValue([
+        {
+          name: 'Team A',
+          groupName: 'team-a',
+          id: 1,
+          orgId: 1,
+          orgName: 'Default',
+        },
+        {
+          name: 'Team B',
+          groupName: 'team-b',
+          id: 2,
+          orgId: 2,
+          orgName: 'Other Org',
+        },
+      ]);
+
+      const teamProvider = AAPEntityProvider.fromConfig(
+        new ConfigReader(MOCK_CONFIG.data),
+        mockAnsibleService,
+        {
+          schedule: new PersistingTaskRunner(),
+          logger: teamMockLogger,
+        },
+      )[0];
+
+      teamProvider.connect(teamMockConnection);
+
+      const result = await teamProvider.createSingleUser(username, userID);
+
+      expect(result).toBe(true);
+      expect(teamMockConnection.applyMutation).toHaveBeenCalledWith({
+        type: 'delta',
+        added: [
+          {
+            entity: expect.objectContaining({
+              spec: expect.objectContaining({
+                memberOf: ['Team A'],
+              }),
+            }),
+            locationKey: 'AapEntityProvider:development',
+          },
+        ],
+        removed: [],
+      });
+    });
   });
 
   it('handles errors gracefully', async () => {

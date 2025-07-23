@@ -27,6 +27,7 @@ import { organizationParser, teamParser, userParser } from './entityParser';
 export class AAPEntityProvider implements EntityProvider {
   private readonly env: string;
   private readonly baseUrl: string;
+  private readonly orgs: string[];
   private readonly logger: LoggerService;
   private readonly ansibleServiceRef: IAAPService;
   private readonly scheduleFn: () => Promise<void>;
@@ -88,6 +89,7 @@ export class AAPEntityProvider implements EntityProvider {
   ) {
     this.env = config.id;
     this.baseUrl = config.baseUrl;
+    this.orgs = config.organizations;
     this.logger = logger.child({
       target: this.getProviderName(),
     });
@@ -325,5 +327,112 @@ export class AAPEntityProvider implements EntityProvider {
   async connect(connection: EntityProviderConnection): Promise<void> {
     this.connection = connection;
     await this.scheduleFn();
+  }
+
+  async createSingleUser(username: string, userID: number): Promise<boolean> {
+    if (!this.connection) {
+      throw new NotFoundError('Not initialized');
+    }
+
+    let error = false;
+    try {
+      this.logger.info(
+        `Checking for user ${userID} in configured organizations`,
+      );
+      const userOrgs = await this.ansibleServiceRef.getOrgsByUserId(userID);
+
+      // check if user's org is configured in app-config
+      const userOrgNames = userOrgs.map(org => org.name.toLowerCase());
+      const matchingOrgs = userOrgNames.filter(orgName =>
+        this.orgs.includes(orgName),
+      );
+
+      // get user's information
+      let foundUser;
+      try {
+        foundUser = await this.ansibleServiceRef.getUserInfoById(userID);
+        this.logger.info(`User ${username} details fetched successfully`);
+      } catch (e: any) {
+        throw new Error(
+          `Failed to fetch user details for ${username} (ID: ${userID}): ${e?.message ?? ''}`,
+        );
+      }
+
+      if (!foundUser.username || foundUser.username.trim() === '') {
+        throw new Error(
+          `User ${username} (ID: ${userID}) has invalid username: '${foundUser.username}'`,
+        );
+      }
+
+      // find user in configured org teams
+      const userTeams = await this.ansibleServiceRef.getTeamsByUserId(userID);
+      const userMembers: string[] = [];
+      const teamsInConfiguredOrgs: string[] = [];
+
+      for (const team of userTeams) {
+        if (this.orgs.includes(team.orgName.toLowerCase())) {
+          userMembers.push(team.name);
+          teamsInConfiguredOrgs.push(team.name);
+        }
+      }
+
+      const hasDirectOrgAccess = matchingOrgs.length > 0;
+      const hasTeamAccess = teamsInConfiguredOrgs.length > 0;
+
+      // check if user is a superuser
+      const isSuperuser = foundUser.is_superuser;
+
+      if (!hasDirectOrgAccess && !hasTeamAccess && !isSuperuser) {
+        throw new Error(
+          `User ${username} (ID: ${userID}) does not belong to any configured organizations: ${this.orgs.join(', ')}, is not a member of any teams in those organizations, and is not a system user.`,
+        );
+      }
+
+      if (hasDirectOrgAccess) {
+        this.logger.info(
+          `User ${username} found in organizations: ${matchingOrgs.join(', ')}`,
+        );
+      } else if (hasTeamAccess) {
+        this.logger.info(
+          `User ${username} not in configured organizations but found in teams: ${teamsInConfiguredOrgs.join(', ')}`,
+        );
+      } else if (isSuperuser) {
+        this.logger.info(
+          `User ${username} not in configured organizations or teams but found as system user`,
+        );
+      }
+
+      userMembers.push(...matchingOrgs);
+
+      const userEntity = userParser({
+        baseUrl: this.baseUrl,
+        nameSpace: 'default',
+        user: foundUser,
+        groupMemberships: userMembers,
+      });
+
+      await this.connection.applyMutation({
+        type: 'delta',
+        added: [
+          {
+            entity: userEntity,
+            locationKey: this.getProviderName(),
+          },
+        ],
+        removed: [],
+      });
+
+      this.logger.info(
+        `[${AAPEntityProvider.pluginLogName}]: Created user ${username} with groups: ${userMembers.join(', ')}`,
+      );
+    } catch (e: any) {
+      this.logger.error(
+        `[${AAPEntityProvider.pluginLogName}]: Error creating user ${username}. ${e?.message ?? ''}`,
+      );
+      error = true;
+      throw e;
+    }
+
+    return !error;
   }
 }

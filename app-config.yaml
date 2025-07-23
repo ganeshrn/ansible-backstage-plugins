@@ -89,7 +89,7 @@ auth:
         clientSecret: <changeme>
         signIn:
           resolvers:
-            - resolver: usernameMatchingUser
+            - resolver: allowNewAAPUserSignIn
 
 scaffolder:
   # see https://backstage.io/docs/features/software-templates/configuration for software template options

@@ -1530,9 +1530,9 @@ describe('AAPClient', () => {
             namespace: 'testorg',
             related: {
               users:
-                'https://test.example.com/api/controller/v2/organizations/1/users/',
+                'https://test.example.com/api/gateway/v1/organizations/1/users/',
               teams:
-                'https://test.example.com/api/controller/v2/organizations/1/teams/',
+                'https://test.example.com/api/gateway/v1/organizations/1/teams/',
             },
           },
         ];
@@ -1544,8 +1544,7 @@ describe('AAPClient', () => {
             name: 'Test Team',
             description: 'A test team',
             related: {
-              users:
-                'https://test.example.com/api/controller/v2/teams/1/users/',
+              users: 'https://test.example.com/api/gateway/v1/teams/1/users/',
             },
           },
         ];
@@ -1617,7 +1616,7 @@ describe('AAPClient', () => {
           .mockRejectedValueOnce(new Error('API Error'));
 
         await expect(client.getOrganizations(true)).rejects.toThrow(
-          'Error retrieving organization details from api/controller/v2/organizations/ : Error: API Error.',
+          'Error retrieving organization details from api/gateway/v1/organizations/ : Error: API Error.',
         );
       });
 
@@ -1629,9 +1628,9 @@ describe('AAPClient', () => {
             namespace: 'testorg',
             related: {
               users:
-                'https://test.example.com/api/controller/v2/organizations/1/users/',
+                'https://test.example.com/api/gateway/v1/organizations/1/users/',
               teams:
-                'https://test.example.com/api/controller/v2/organizations/1/teams/',
+                'https://test.example.com/api/gateway/v1/organizations/1/teams/',
             },
           },
         ];
@@ -1693,25 +1692,37 @@ describe('AAPClient', () => {
             id: 1,
             name: 'Development Team',
             organization: 1,
+            summary_fields: {
+              organization: {
+                name: 'Test Org',
+              },
+            },
           },
           {
             id: 2,
             name: 'QA Team',
             organization: 1,
+            summary_fields: {
+              organization: {
+                name: 'Test Org',
+              },
+            },
           },
           {
             id: 3,
             name: null,
             organization: 1,
+            summary_fields: {
+              organization: {
+                name: 'Test Org',
+              },
+            },
           },
         ];
 
-        jest.spyOn(client as any, 'executeGetRequest').mockResolvedValueOnce({
-          ok: true,
-          json: jest.fn().mockResolvedValue({
-            results: mockUserTeamsData,
-          }),
-        });
+        jest
+          .spyOn(client as any, 'executeCatalogRequest')
+          .mockResolvedValueOnce(mockUserTeamsData);
 
         const result = await client.getTeamsByUserId(1);
 
@@ -1722,12 +1733,14 @@ describe('AAPClient', () => {
             groupName: 'development-team',
             id: 1,
             orgId: 1,
+            orgName: 'Test Org',
           },
           {
             name: 'QA Team',
             groupName: 'qa-team',
             id: 2,
             orgId: 1,
+            orgName: 'Test Org',
           },
         ]);
       });
@@ -1738,19 +1751,183 @@ describe('AAPClient', () => {
             id: 1,
             name: 'Special Team!',
             organization: 1,
+            summary_fields: {
+              organization: {
+                name: 'Test Org',
+              },
+            },
           },
         ];
 
-        jest.spyOn(client as any, 'executeGetRequest').mockResolvedValueOnce({
-          ok: true,
-          json: jest.fn().mockResolvedValue({
-            results: mockUserTeamsData,
-          }),
-        });
+        jest
+          .spyOn(client as any, 'executeCatalogRequest')
+          .mockResolvedValueOnce(mockUserTeamsData);
 
         const result = await client.getTeamsByUserId(1);
 
         expect(result[0].groupName).toBe('special-team');
+        expect(result[0].orgName).toBe('Test Org');
+      });
+    });
+
+    describe('getOrgsByUserId', () => {
+      it('should fetch organizations for a specific user', async () => {
+        const mockUserOrgsData = [
+          {
+            id: 1,
+            name: 'Development Org',
+          },
+          {
+            id: 2,
+            name: 'QA Organization',
+          },
+          {
+            id: 3,
+            name: null,
+          },
+          {
+            id: 4,
+            name: '',
+          },
+        ];
+
+        jest
+          .spyOn(client as any, 'executeCatalogRequest')
+          .mockResolvedValueOnce(mockUserOrgsData);
+
+        const result = await client.getOrgsByUserId(1);
+
+        expect(result).toHaveLength(2);
+        expect(result).toEqual([
+          {
+            name: 'Development Org',
+            groupName: 'development-org',
+          },
+          {
+            name: 'QA Organization',
+            groupName: 'qa-organization',
+          },
+        ]);
+      });
+
+      it('should handle empty organizations list', async () => {
+        jest
+          .spyOn(client as any, 'executeCatalogRequest')
+          .mockResolvedValueOnce([]);
+
+        const result = await client.getOrgsByUserId(1);
+
+        expect(result).toEqual([]);
+      });
+
+      it('should format organization names correctly', async () => {
+        const mockUserOrgsData = [
+          {
+            id: 1,
+            name: 'Example Org Name!',
+          },
+        ];
+
+        jest
+          .spyOn(client as any, 'executeCatalogRequest')
+          .mockResolvedValueOnce(mockUserOrgsData);
+
+        const result = await client.getOrgsByUserId(1);
+
+        expect(result[0].groupName).toBe('example-org-name');
+      });
+    });
+
+    describe('getUserInfoById', () => {
+      it('should fetch user details by ID', async () => {
+        const mockUserData = {
+          id: 123,
+          url: 'https://test.example.com/api/v2/users/123/',
+          username: 'testuser',
+          email: 'testuser@example.com',
+          first_name: 'Test',
+          last_name: 'User',
+          is_superuser: false,
+        };
+
+        const mockResponse = {
+          ok: true,
+          json: jest.fn().mockResolvedValue(mockUserData),
+        };
+
+        jest
+          .spyOn(client as any, 'executeGetRequest')
+          .mockResolvedValueOnce(mockResponse);
+
+        const result = await client.getUserInfoById(123);
+
+        expect(result).toEqual({
+          id: 123,
+          url: 'https://test.example.com/api/v2/users/123/',
+          username: 'testuser',
+          email: 'testuser@example.com',
+          first_name: 'Test',
+          last_name: 'User',
+          is_superuser: false,
+          is_orguser: true,
+        });
+      });
+
+      it('should handle user with missing email and names', async () => {
+        const mockUserData = {
+          id: 456,
+          url: 'https://test.example.com/api/v2/users/456/',
+          username: 'usernodata',
+          is_superuser: true,
+        };
+
+        const mockResponse = {
+          ok: true,
+          json: jest.fn().mockResolvedValue(mockUserData),
+        };
+
+        jest
+          .spyOn(client as any, 'executeGetRequest')
+          .mockResolvedValueOnce(mockResponse);
+
+        const result = await client.getUserInfoById(456);
+
+        expect(result).toEqual({
+          id: 456,
+          url: 'https://test.example.com/api/v2/users/456/',
+          username: 'usernodata',
+          email: '',
+          first_name: '',
+          last_name: '',
+          is_superuser: true,
+          is_orguser: true,
+        });
+      });
+
+      it('should handle superuser correctly', async () => {
+        const mockUserData = {
+          id: 789,
+          url: 'https://test.example.com/api/v2/users/789/',
+          username: 'admin',
+          email: 'admin@example.com',
+          first_name: 'Admin',
+          last_name: 'User',
+          is_superuser: true,
+        };
+
+        const mockResponse = {
+          ok: true,
+          json: jest.fn().mockResolvedValue(mockUserData),
+        };
+
+        jest
+          .spyOn(client as any, 'executeGetRequest')
+          .mockResolvedValueOnce(mockResponse);
+
+        const result = await client.getUserInfoById(789);
+
+        expect(result.is_superuser).toBe(true);
+        expect(result.is_orguser).toBe(true);
       });
     });
 
@@ -2012,6 +2189,7 @@ describe('AAPClient', () => {
           json: jest.fn().mockResolvedValue({
             results: [
               {
+                id: 1,
                 username: 'testuser',
                 email: 'test@example.com',
                 first_name: 'Test',
@@ -2026,6 +2204,7 @@ describe('AAPClient', () => {
 
         expect(result).toEqual({
           provider: 'AAP oauth2',
+          id: '1',
           username: 'testuser',
           email: 'test@example.com',
           displayName: 'Test User',
@@ -2073,6 +2252,7 @@ describe('AAPClient', () => {
           json: jest.fn().mockResolvedValue({
             results: [
               {
+                id: 123,
                 username: 'testuser',
                 email: 'test@example.com',
                 first_name: '',
@@ -2104,9 +2284,9 @@ describe('AAPClient', () => {
           namespace: 'testorg',
           related: {
             users:
-              'https://test.example.com/api/controller/v2/organizations/1/users/',
+              'https://test.example.com/api/gateway/v1/organizations/1/users/',
             teams:
-              'https://test.example.com/api/controller/v2/organizations/1/teams/',
+              'https://test.example.com/api/gateway/v1/organizations/1/teams/',
           },
         },
       ];
@@ -2151,7 +2331,7 @@ describe('AAPClient', () => {
           namespace: 'testorg',
           related: {
             teams:
-              'https://test.example.com/api/controller/v2/organizations/1/teams/',
+              'https://test.example.com/api/gateway/v1/organizations/1/teams/',
           },
         },
       ];
