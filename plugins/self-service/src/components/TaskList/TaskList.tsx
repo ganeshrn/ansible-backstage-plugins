@@ -1,23 +1,22 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useApi, useRouteRef } from '@backstage/core-plugin-api';
+import {
+  identityApiRef,
+  useApi,
+  useRouteRef,
+} from '@backstage/core-plugin-api';
 import {
   scaffolderApiRef,
   ScaffolderTask,
 } from '@backstage/plugin-scaffolder-react';
 import { TablePaginationActionsProps } from '@material-ui/core/TablePagination/TablePaginationActions';
-// eslint-disable-next-line no-restricted-imports
 import { useNavigate } from 'react-router-dom';
 import { Content, Header, Page } from '@backstage/core-components';
 import {
   Box,
-  Button,
-  FormControl,
   Grid,
   IconButton,
   Link,
   makeStyles,
-  MenuItem,
-  Select,
   Table,
   TableBody,
   TableCell,
@@ -37,6 +36,7 @@ import PlayCircleOutlineIcon from '@material-ui/icons/PlayCircleOutline';
 import AddCircleOutlineIcon from '@material-ui/icons/AddCircleOutline';
 import BlockIcon from '@material-ui/icons/Block';
 import { rootRouteRef } from '../../routes';
+import { useAsync } from 'react-use';
 
 const headerStyles = makeStyles(theme => ({
   header_title_color: {
@@ -130,12 +130,28 @@ function TablePaginationActions(props: TablePaginationActionsProps) {
 export const TaskList = () => {
   const classes = headerStyles();
   const scaffolderApi = useApi(scaffolderApiRef);
+  const identityApi = useApi(identityApiRef);
+
+  const { value: isAdmin, loading: adminLoading } = useAsync(async () => {
+    const identity = await identityApi.getBackstageIdentity();
+
+    // Check if user is member of admin groups
+    const adminGroups = [
+      'group:default/admins',
+      'group:default/rbac_admin',
+      'group:default/portal-admins',
+      'group:default/portal_admins',
+    ];
+    return identity.ownershipEntityRefs.some(ref =>
+      adminGroups.includes(ref.toLowerCase()),
+    );
+  }, []);
   const [tasks, setTasks] = useState<ScaffolderTask[]>([]);
   const [totalTasks, setTotalTasks] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | undefined>();
   const [filters, setFilters] = useState<Filters>({
-    owner: 'all',
+    owner: 'owned',
   });
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -167,16 +183,15 @@ export const TaskList = () => {
     fetchTasks();
   }, [fetchTasks]);
 
-  const handleFilterChange = (
-    key: keyof Filters,
-    value: 'all' | 'owned' | undefined, // Ensure the value matches the allowed types
-  ) => {
-    setFilters(prevFilters => ({
-      ...prevFilters,
-      [key]: value,
-    }));
-    setPage(0);
-  };
+  useEffect(() => {
+    if (!adminLoading) {
+      setFilters(prevFilters => ({
+        ...prevFilters,
+        owner: isAdmin ? 'all' : 'owned',
+      }));
+      setPage(0);
+    }
+  }, [adminLoading, isAdmin]);
 
   const handlePageChange = (_: unknown, newPage: number) => {
     setPage(newPage);
@@ -251,55 +266,7 @@ export const TaskList = () => {
       />
       <Content>
         <Grid container spacing={2}>
-          <Grid item xs={12} sm={12} md={4} lg={2}>
-            <Box
-              display="flex"
-              alignItems="center"
-              justifyContent="space-between"
-            >
-              <h2>Filters</h2>
-              <Button
-                variant="text"
-                color="primary"
-                onClick={() => setFilters({ owner: undefined })}
-              >
-                Clear all
-              </Button>
-            </Box>
-            <hr />
-            <Box component="form" display="flex" flexDirection="column" p={0}>
-              <FormControl fullWidth margin="normal">
-                <Box mt={2} mb={1} display="flex" justifyContent="flex-start">
-                  <Typography variant="body2" style={{ fontWeight: 'bold' }}>
-                    Owner
-                  </Typography>
-                </Box>
-                <Select
-                  data-testid="select-owner"
-                  variant="outlined"
-                  value={filters.owner ?? ''}
-                  onChange={e => {
-                    const value = e.target.value;
-                    // Narrow the value to the expected type
-                    if (
-                      value === 'all' ||
-                      value === 'owned' ||
-                      value === undefined
-                    ) {
-                      handleFilterChange('owner', value || undefined);
-                    } else {
-                      // Handle the case where the value is invalid
-                      console.warn('Invalid filter owner value:', value); // eslint-disable-line no-console
-                    }
-                  }}
-                >
-                  <MenuItem value="all">All</MenuItem>
-                  <MenuItem value="owned">My</MenuItem>
-                </Select>
-              </FormControl>
-            </Box>
-          </Grid>
-          <Grid item xs={12} sm={12} md={8} lg={10}>
+          <Grid item xs={12} sm={12}>
             {loading && <Typography variant="body1">Loading...</Typography>}
             {!loading && error && (
               <Typography color="error" variant="body1">
@@ -378,7 +345,7 @@ export const TaskList = () => {
                       ))}
                       {totalTasks === 0 && (
                         <TableRow>
-                          <TableCell colSpan={4} align="center">
+                          <TableCell colSpan={5} align="center">
                             No tasks found
                           </TableCell>
                         </TableRow>

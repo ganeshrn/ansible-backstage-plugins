@@ -27,7 +27,7 @@ export async function createRouter(options: {
 }): Promise<express.Router> {
   const { logger, aapEntityProvider, jobTemplateProvider } = options;
   const router = Router();
-  router.use(express.json());
+  // Note: express.json() middleware is already provided by the catalog backend
 
   router.get('/health', (_, response) => {
     logger.info('PONG!');

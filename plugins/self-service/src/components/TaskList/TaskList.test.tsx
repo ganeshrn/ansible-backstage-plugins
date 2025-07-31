@@ -42,8 +42,6 @@ describe('My items', () => {
     expect(
       screen.getByText('All tasks that have been started'),
     ).toBeInTheDocument();
-    expect(screen.getByText('Filters')).toBeInTheDocument();
-    expect(screen.getByText('Clear all')).toBeInTheDocument();
     expect(
       screen.getByRole('columnheader', { name: 'Task ID' }),
     ).toBeInTheDocument();

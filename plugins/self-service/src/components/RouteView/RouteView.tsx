@@ -36,7 +36,10 @@ export const RouteView = () => {
           <Route
             path="tasks"
             element={
-              <RequirePermission permission={taskReadPermission}>
+              <RequirePermission
+                permission={taskReadPermission}
+                resourceRef="scaffolder-task"
+              >
                 <TaskList />
               </RequirePermission>
             }
@@ -44,7 +47,10 @@ export const RouteView = () => {
           <Route
             path="tasks/:taskId"
             element={
-              <RequirePermission permission={taskReadPermission}>
+              <RequirePermission
+                permission={taskReadPermission}
+                resourceRef="scaffolder-task"
+              >
                 <RunTask />
               </RequirePermission>
             }
