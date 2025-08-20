@@ -25,6 +25,7 @@ import { apis } from './apis';
 import { entityPage } from './components/catalog/EntityPage';
 import { searchPage } from './components/search/SearchPage';
 import { Root } from './components/Root';
+import { GlobalHeader } from './components/GlobalHeader';
 import { getThemes } from '@red-hat-developer-hub/backstage-plugin-theme';
 
 import {
@@ -131,6 +132,7 @@ export default app.createRoot(
     <AlertDisplay />
     <OAuthRequestDialog />
     <AppRouter>
+      <GlobalHeader />
       <Root>{routes}</Root>
     </AppRouter>
   </>,

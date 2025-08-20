@@ -67,7 +67,7 @@ integrations:
   gitlab:
     - host: gitlab.com
       token: <YOUR_GITLAB_PAT>
-proxy: {}
+proxy: null
 techdocs:
   builder: local
   generator:
@@ -92,7 +92,7 @@ auth:
         signIn:
           resolvers:
             - resolver: allowNewAAPUserSignIn
-scaffolder: {}
+scaffolder: null
 catalog:
   stitchingStrategy:
     immediate: true
@@ -121,7 +121,7 @@ catalog:
   providers:
     rhaap:
       development:
-        orgs: Default
+        orgs: SIG-IDE
         sync:
           # Syncs AAP organizations, users, and teams
           # Also creates dynamic aap-admins group with current superusers
@@ -129,6 +129,9 @@ catalog:
             schedule:
               frequency: { minutes: 60 }
               timeout: { minutes: 15 }
+            # Optional: Limit the number of group memberships per user to prevent JWT token size issues
+            # Default: 50. Reduce this if users have too many group memberships causing authentication failures
+            # maxGroupMemberships: 25
           jobTemplates:
             enabled: true
             schedule:
@@ -154,13 +157,10 @@ ansible:
     baseUrl: <changeme>    # AAP controller URL
     token: <changeme>      # AAP API token with appropriate permissions
     checkSSL: false        # Set to true in production
-    :
-      type: file
-      target: 
   creatorService:
     baseUrl: localhost
     port: '8000'
-kubernetes: {}
+kubernetes: null
 
 permission:
   enabled: true

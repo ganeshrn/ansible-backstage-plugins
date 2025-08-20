@@ -253,6 +253,7 @@ export const HomeComponent = () => {
         onClose={() => setShowSnackbar(false)}
         autoHideDuration={3000}
         message={snackbarMsg}
+        style={{ zIndex: 10000, marginTop: '70px' }}
       />
     </Page>
   );

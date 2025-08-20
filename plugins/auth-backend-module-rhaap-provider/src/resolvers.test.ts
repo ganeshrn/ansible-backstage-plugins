@@ -12,9 +12,28 @@ const mockDiscovery = {
   getBaseUrl: jest.fn().mockResolvedValue('http://localhost:7007/api/catalog'),
 };
 
+const mockAuth = {
+  getOwnServiceCredentials: jest
+    .fn()
+    .mockResolvedValue({ principal: { type: 'service' } }),
+  getPluginRequestToken: jest
+    .fn()
+    .mockResolvedValue({ token: 'mock-service-token' }),
+};
+
 describe('resolvers', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Mock setTimeout to avoid actual delays in tests
+    jest
+      .spyOn(global, 'setTimeout')
+      .mockImplementation((callback: any, _delay?: number) => {
+        // Immediately call the callback to avoid delays in tests
+        if (typeof callback === 'function') {
+          callback();
+        }
+        return 1 as any; // Return a fake timer ID
+      });
     (global.fetch as jest.Mock).mockResolvedValue({
       ok: true,
       text: () => Promise.resolve('User created successfully'),
@@ -22,6 +41,10 @@ describe('resolvers', () => {
     mockDiscovery.getBaseUrl.mockResolvedValue(
       'http://localhost:7007/api/catalog',
     );
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   describe('usernameMatchingUser', () => {
@@ -109,6 +132,7 @@ describe('resolvers', () => {
     it('should sign in existing user without creating new user', async () => {
       const resolverFactory = AAPAuthSignInResolvers.allowNewAAPUserSignIn({
         discovery: mockDiscovery as any,
+        auth: mockAuth as any,
       });
       const resolver = (resolverFactory as any)();
 
@@ -160,6 +184,7 @@ describe('resolvers', () => {
     it('should create new user when not found in catalog and then sign in', async () => {
       const resolverFactory = AAPAuthSignInResolvers.allowNewAAPUserSignIn({
         discovery: mockDiscovery as any,
+        auth: mockAuth as any,
       });
       const resolver = (resolverFactory as any)();
 
@@ -207,6 +232,7 @@ describe('resolvers', () => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            Authorization: 'Bearer mock-service-token',
           },
           body: JSON.stringify({ username: 'newUser', userID: 456 }),
         },
@@ -220,6 +246,7 @@ describe('resolvers', () => {
     it('should fail when username is missing', async () => {
       const resolverFactory = AAPAuthSignInResolvers.allowNewAAPUserSignIn({
         discovery: mockDiscovery as any,
+        auth: mockAuth as any,
       });
       const resolver = (resolverFactory as any)();
 
@@ -264,6 +291,7 @@ describe('resolvers', () => {
     it('should fail when userID is missing', async () => {
       const resolverFactory = AAPAuthSignInResolvers.allowNewAAPUserSignIn({
         discovery: mockDiscovery as any,
+        auth: mockAuth as any,
       });
       const resolver = (resolverFactory as any)();
 
@@ -308,6 +336,7 @@ describe('resolvers', () => {
     it('should handle user creation failure', async () => {
       const resolverFactory = AAPAuthSignInResolvers.allowNewAAPUserSignIn({
         discovery: mockDiscovery as any,
+        auth: mockAuth as any,
       });
       const resolver = (resolverFactory as any)();
 
@@ -362,6 +391,7 @@ describe('resolvers', () => {
     it('should handle sign-in failure after user creation', async () => {
       const resolverFactory = AAPAuthSignInResolvers.allowNewAAPUserSignIn({
         discovery: mockDiscovery as any,
+        auth: mockAuth as any,
       });
       const resolver = (resolverFactory as any)();
 
@@ -406,13 +436,14 @@ describe('resolvers', () => {
       }
 
       expect(error?.message).toContain(
-        'Sign in failed: User not found in the RH AAP. Verify that users/groups are synchronized to the software catalog. Refer to the RH AAP Authentication documentation for further details. Error: Error: Sign-in failed',
+        'Sign in failed: User newUser not found in the RH AAP catalog after creation attempt',
       );
     });
 
     it('should handle zero as valid userID', async () => {
       const resolverFactory = AAPAuthSignInResolvers.allowNewAAPUserSignIn({
         discovery: mockDiscovery as any,
+        auth: mockAuth as any,
       });
       const resolver = (resolverFactory as any)();
 

@@ -1,0 +1,38 @@
+# Codecov configuration for ansible-backstage-plugins
+coverage:
+  ignore:
+    - "packages/**/*"           # Ignore all files in packages directory
+    - "node_modules/**/*"       # Ignore node_modules
+    - "dist/**/*"               # Ignore build output
+    - "build/**/*"              # Ignore build output
+    - "coverage/**/*"           # Ignore coverage reports
+    - "**/*.test.ts"            # Ignore test files
+    - "**/*.test.tsx"           # Ignore test files
+    - "**/*.spec.ts"            # Ignore spec files
+    - "**/*.spec.tsx"           # Ignore spec files
+    - "**/*.stories.ts"         # Ignore storybook files
+    - "**/*.stories.tsx"        # Ignore storybook files
+    - "e2e-tests/**/*"          # Ignore e2e tests
+    - "examples/**/*"           # Ignore examples
+    - "docs/**/*"               # Ignore documentation
+
+  # Only include plugins directory for coverage
+  paths:
+    - "plugins/"
+
+  # Coverage targets
+  status:
+    project:
+      default:
+        target: 70%              # Target 70% coverage for the project
+        threshold: 5%            # Allow 5% drop in coverage
+    patch:
+      default:
+        target: 80%              # Target 80% coverage for new code
+        threshold: 10%           # Allow 10% drop for patches
+
+# Comment configuration
+comment:
+  layout: "reach,diff,flags,tree"
+  behavior: default
+  require_changes: false

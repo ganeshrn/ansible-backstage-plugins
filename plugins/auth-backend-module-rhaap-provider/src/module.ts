@@ -20,8 +20,9 @@ export const authModuleRhaapProvider = createBackendModule({
         ansibleService: ansibleServiceRef,
         config: coreServices.rootConfig,
         discovery: coreServices.discovery,
+        auth: coreServices.auth,
       },
-      async init({ providers, ansibleService, discovery }) {
+      async init({ providers, ansibleService, discovery, auth }) {
         providers.registerProvider({
           providerId: 'rhaap',
           factory: createOAuthProviderFactory({
@@ -29,7 +30,10 @@ export const authModuleRhaapProvider = createBackendModule({
             signInResolverFactories: {
               usernameMatchingUser: AAPAuthSignInResolvers.usernameMatchingUser,
               allowNewAAPUserSignIn:
-                AAPAuthSignInResolvers.allowNewAAPUserSignIn({ discovery }),
+                AAPAuthSignInResolvers.allowNewAAPUserSignIn({
+                  discovery,
+                  auth,
+                }),
             },
           }),
         });
