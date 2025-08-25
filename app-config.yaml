@@ -77,6 +77,9 @@ techdocs:
 enableExperimentalRedirectFlow: true
 signInPage: rhaap
 auth:
+  # Omit group memberships from JWT tokens to prevent token size issues
+  # Group memberships will be fetched via /v1/userinfo endpoint instead
+  omitIdentityTokenOwnershipClaim: true
   environment: development
   providers:
     github:
@@ -129,9 +132,6 @@ catalog:
             schedule:
               frequency: { minutes: 60 }
               timeout: { minutes: 15 }
-            # Optional: Limit the number of group memberships per user to prevent JWT token size issues
-            # Default: 50. Reduce this if users have too many group memberships causing authentication failures
-            # maxGroupMemberships: 25
           jobTemplates:
             enabled: true
             schedule:

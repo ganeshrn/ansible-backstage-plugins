@@ -53,7 +53,6 @@ function readAapApiEntityConfig(
   }
   let surveyEnabled: boolean | undefined = undefined;
   let jobTemplateLabels: string[] = [];
-  let maxGroupMemberships: number | undefined = undefined;
 
   if (syncEntity === 'jobTemplates') {
     if (catalogConfig.has(`sync.${syncEntity}.surveyEnabled`)) {
@@ -67,14 +66,6 @@ function readAapApiEntityConfig(
     }
   }
 
-  if (syncEntity === 'orgsUsersTeams') {
-    if (catalogConfig.has(`sync.${syncEntity}.maxGroupMemberships`)) {
-      maxGroupMemberships = catalogConfig.getOptionalNumber(
-        `sync.${syncEntity}.maxGroupMemberships`,
-      );
-    }
-  }
-
   return {
     id,
     baseUrl,
@@ -84,6 +75,5 @@ function readAapApiEntityConfig(
     organizations,
     surveyEnabled,
     jobTemplateLabels,
-    maxGroupMemberships,
   };
 }

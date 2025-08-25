@@ -9,5 +9,4 @@ export type AapConfig = {
   organizations: string[];
   surveyEnabled?: boolean | undefined;
   jobTemplateLabels?: string[];
-  maxGroupMemberships?: number;
 };

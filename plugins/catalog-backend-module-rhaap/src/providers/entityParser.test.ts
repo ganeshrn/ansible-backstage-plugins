@@ -20,14 +20,12 @@ describe('entityParser', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
-
   describe('organizationParser', () => {
     it('should parse organization data correctly', () => {
       const mockOrg: Organization = {
         id: 1,
         name: 'Test Organization',
       };
-
       const options = {
         baseUrl: 'https://example.com',
         nameSpace: 'test-namespace',
@@ -35,9 +33,7 @@ describe('entityParser', () => {
         orgMembers: ['user1', 'user2'],
         teams: ['team1', 'team2'],
       };
-
       const result = organizationParser(options);
-
       expect(result).toEqual({
         apiVersion: 'backstage.io/v1alpha1',
         kind: 'Group',
@@ -59,13 +55,11 @@ describe('entityParser', () => {
         },
       });
     });
-
     it('should handle organization with special characters in name', () => {
       const mockOrg: Organization = {
         id: 2,
         name: 'Test Org With Special!@#$%^&*()_+Characters',
       };
-
       const options = {
         baseUrl: 'https://example.com',
         nameSpace: 'test-namespace',
@@ -73,16 +67,13 @@ describe('entityParser', () => {
         orgMembers: [],
         teams: [],
       };
-
       const result = organizationParser(options);
-
       expect(result.metadata.name).toBe('test-org-with-special_characters');
       expect(result.metadata.title).toBe(
         'Test Org With Special!@#$%^&*()_+Characters',
       );
     });
   });
-
   describe('teamParser', () => {
     it('should parse team data correctly', () => {
       const mockTeam: Team = {
@@ -92,16 +83,13 @@ describe('entityParser', () => {
         description: 'A test team',
         groupName: 'test-team-group',
       };
-
       const options = {
         baseUrl: 'https://example.com',
         nameSpace: 'test-namespace',
         team: mockTeam,
         teamMembers: ['user1', 'user2', 'user3'],
       };
-
       const result = teamParser(options);
-
       expect(result).toEqual({
         apiVersion: 'backstage.io/v1alpha1',
         kind: 'Group',
@@ -124,7 +112,6 @@ describe('entityParser', () => {
         },
       });
     });
-
     it('should handle team with no description', () => {
       const mockTeam: Team = {
         id: 2,
@@ -133,21 +120,17 @@ describe('entityParser', () => {
         description: '',
         groupName: 'another-team',
       };
-
       const options = {
         baseUrl: 'https://example.com',
         nameSpace: 'test-namespace',
         team: mockTeam,
         teamMembers: [],
       };
-
       const result = teamParser(options);
-
       expect(result.metadata.description).toBe('');
       expect((result.spec as any).members).toEqual([]);
     });
   });
-
   describe('userParser', () => {
     it('should parse user data correctly with first and last name', () => {
       const mockUser: User = {
@@ -159,17 +142,13 @@ describe('entityParser', () => {
         last_name: 'Doe',
         is_superuser: false,
       };
-
       const options = {
         baseUrl: 'https://example.com',
         nameSpace: 'test-namespace',
         user: mockUser,
         groupMemberships: ['group1', 'group2'],
-        maxGroupMemberships: 50,
       };
-
       const result = userParser(options);
-
       expect(result).toEqual({
         apiVersion: 'backstage.io/v1alpha1',
         kind: 'User',
@@ -195,7 +174,6 @@ describe('entityParser', () => {
         },
       });
     });
-
     it('should handle user with no first or last name', () => {
       const mockUser: User = {
         id: 2,
@@ -206,21 +184,16 @@ describe('entityParser', () => {
         last_name: '',
         is_superuser: true,
       };
-
       const options = {
         baseUrl: 'https://example.com',
         nameSpace: 'test-namespace',
         user: mockUser,
         groupMemberships: [],
-        maxGroupMemberships: 50,
       };
-
       const result = userParser(options);
-
       expect(result.metadata.title).toBe('janedoe');
       expect((result.spec as any).profile.displayName).toBe('janedoe');
     });
-
     it('should handle user with no email', () => {
       const mockUser: User = {
         id: 3,
@@ -231,20 +204,15 @@ describe('entityParser', () => {
         last_name: 'User',
         is_superuser: false,
       };
-
       const options = {
         baseUrl: 'https://example.com',
         nameSpace: 'test-namespace',
         user: mockUser,
         groupMemberships: ['group1'],
-        maxGroupMemberships: 50,
       };
-
       const result = userParser(options);
-
       expect((result.spec as any).profile.email).toBe(' ');
     });
-
     it('should handle user with only first name', () => {
       const mockUser: User = {
         id: 4,
@@ -255,139 +223,16 @@ describe('entityParser', () => {
         last_name: '',
         is_superuser: false,
       };
-
       const options = {
         baseUrl: 'https://example.com',
         nameSpace: 'test-namespace',
         user: mockUser,
         groupMemberships: [],
-        maxGroupMemberships: 50,
       };
-
       const result = userParser(options);
-
       expect(result.metadata.title).toBe('First ');
       expect((result.spec as any).profile.displayName).toBe('First ');
     });
-
-    it('should limit group memberships to prevent JWT token size issues', () => {
-      const mockUser: User = {
-        id: 1,
-        url: 'https://example.com/users/1',
-        username: 'testuser',
-        email: 'test@example.com',
-        first_name: 'Test',
-        last_name: 'User',
-        is_superuser: true, // Should always include aap-admins
-      };
-
-      // Create a large number of groups to test the limiting
-      const manyGroups = Array.from({ length: 60 }, (_, i) => `group-${i + 1}`);
-
-      const options = {
-        baseUrl: 'https://example.com',
-        nameSpace: 'test-namespace',
-        user: mockUser,
-        groupMemberships: manyGroups,
-        maxGroupMemberships: 10, // Set a low limit for testing
-      };
-
-      // Mock console.warn to capture the warning
-      const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
-
-      const result = userParser(options);
-
-      // Should include aap-admins plus 9 other groups (total 10)
-      expect((result.spec as any).memberOf).toHaveLength(10);
-      expect((result.spec as any).memberOf).toContain('aap-admins');
-
-      // Should have logged a warning about limiting groups
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'User testuser has 61 group memberships, limiting to 10',
-        ),
-      );
-
-      consoleSpy.mockRestore();
-    });
-
-    it('should not limit group memberships when under the limit', () => {
-      const mockUser: User = {
-        id: 1,
-        url: 'https://example.com/users/1',
-        username: 'testuser',
-        email: 'test@example.com',
-        first_name: 'Test',
-        last_name: 'User',
-        is_superuser: false,
-      };
-
-      const options = {
-        baseUrl: 'https://example.com',
-        nameSpace: 'test-namespace',
-        user: mockUser,
-        groupMemberships: ['group1', 'group2', 'group3'],
-        maxGroupMemberships: 50,
-      };
-
-      // Mock console.warn to ensure no warning is logged
-      const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
-
-      const result = userParser(options);
-
-      // Should include all 3 groups
-      expect((result.spec as any).memberOf).toHaveLength(3);
-      expect((result.spec as any).memberOf).toEqual([
-        'group1',
-        'group2',
-        'group3',
-      ]);
-
-      // Should not have logged any warning
-      expect(consoleSpy).not.toHaveBeenCalled();
-
-      consoleSpy.mockRestore();
-    });
-
-    it('should use default maxGroupMemberships when not provided', () => {
-      const mockUser: User = {
-        id: 1,
-        url: 'https://example.com/users/1',
-        username: 'testuser',
-        email: 'test@example.com',
-        first_name: 'Test',
-        last_name: 'User',
-        is_superuser: false,
-      };
-
-      // Create 60 groups to exceed the default limit of 50
-      const manyGroups = Array.from({ length: 60 }, (_, i) => `group-${i + 1}`);
-
-      const options = {
-        baseUrl: 'https://example.com',
-        nameSpace: 'test-namespace',
-        user: mockUser,
-        groupMemberships: manyGroups,
-        // maxGroupMemberships not provided, should default to 50
-      };
-
-      const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
-
-      const result = userParser(options);
-
-      // Should limit to default 50 groups
-      expect((result.spec as any).memberOf).toHaveLength(50);
-
-      // Should have logged a warning about limiting groups
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'User testuser has 60 group memberships, limiting to 50',
-        ),
-      );
-
-      consoleSpy.mockRestore();
-    });
-
     it('should handle user with undefined is_superuser', () => {
       const mockUser: User = {
         id: 1,
@@ -404,7 +249,6 @@ describe('entityParser', () => {
         nameSpace: 'test-namespace',
         user: mockUser,
         groupMemberships: ['group1'],
-        maxGroupMemberships: 50,
       };
 
       const result = userParser(options);
@@ -416,77 +260,6 @@ describe('entityParser', () => {
       expect(result.metadata.annotations).not.toHaveProperty(
         'aap.platform/is_superuser',
       );
-    });
-
-    it('should preserve aap-admins group when limiting memberships for non-superuser', () => {
-      const mockUser: User = {
-        id: 1,
-        url: 'https://example.com/users/1',
-        username: 'testuser',
-        email: 'test@example.com',
-        first_name: 'Test',
-        last_name: 'User',
-        is_superuser: false,
-      };
-
-      // Create groups including aap-admins (user might be manually added to it)
-      const manyGroups = [
-        'aap-admins',
-        ...Array.from({ length: 15 }, (_, i) => `group-${i + 1}`),
-      ];
-
-      const options = {
-        baseUrl: 'https://example.com',
-        nameSpace: 'test-namespace',
-        user: mockUser,
-        groupMemberships: manyGroups,
-        maxGroupMemberships: 10,
-      };
-
-      const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
-
-      const result = userParser(options);
-
-      // Should include aap-admins plus 9 other groups (total 10)
-      expect((result.spec as any).memberOf).toHaveLength(10);
-      expect((result.spec as any).memberOf).toContain('aap-admins');
-
-      consoleSpy.mockRestore();
-    });
-
-    it('should show excluded groups in warning message', () => {
-      const mockUser: User = {
-        id: 1,
-        url: 'https://example.com/users/1',
-        username: 'testuser',
-        email: 'test@example.com',
-        first_name: 'Test',
-        last_name: 'User',
-        is_superuser: true,
-      };
-
-      const options = {
-        baseUrl: 'https://example.com',
-        nameSpace: 'test-namespace',
-        user: mockUser,
-        groupMemberships: ['group1', 'group2', 'group3', 'group4', 'group5'],
-        maxGroupMemberships: 3, // Very low limit to test exclusion message
-      };
-
-      const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
-
-      const result = userParser(options);
-
-      // Should include aap-admins plus 2 other groups (total 3)
-      expect((result.spec as any).memberOf).toHaveLength(3);
-      expect((result.spec as any).memberOf).toContain('aap-admins');
-
-      // Should show excluded groups in warning
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Excluded groups: group3, group4, group5'),
-      );
-
-      consoleSpy.mockRestore();
     });
   });
 
@@ -662,30 +435,24 @@ describe('entityParser', () => {
         webhook_service: 'github',
         project: 1,
       };
-
       const mockSurvey: ISurvey = {
         name: 'Test Survey',
         description: 'A test survey',
         spec: [],
       };
-
       const options = {
         baseUrl: 'https://example.com',
         nameSpace: 'test-namespace',
         job: mockJob,
         survey: mockSurvey,
       };
-
-      const result = aapJobTemplateParser(options);
-
-      // The function should return a Template entity
+      const result = aapJobTemplateParser(options); // The function should return a Template entity
       expect(result.apiVersion).toBe('scaffolder.backstage.io/v1beta3');
       expect(result.kind).toBe('Template');
       expect(result.metadata.name).toBe('test-job-template');
       expect(result.metadata.title).toBe('Test Job Template');
       expect(result.metadata.description).toBe('A test job template');
     });
-
     it('should handle job template with null survey', () => {
       const mockJob: IJobTemplate = {
         id: 2,
@@ -857,17 +624,13 @@ describe('entityParser', () => {
         webhook_service: 'github',
         project: 1,
       };
-
       const options = {
         baseUrl: 'https://example.com',
         nameSpace: 'test-namespace',
         job: mockJob,
         survey: null, // Test with null survey
       };
-
-      const result = aapJobTemplateParser(options);
-
-      // The function should still return a Template entity
+      const result = aapJobTemplateParser(options); // The function should still return a Template entity
       expect(result.apiVersion).toBe('scaffolder.backstage.io/v1beta3');
       expect(result.kind).toBe('Template');
       expect(result.metadata.name).toBe('job-without-survey');

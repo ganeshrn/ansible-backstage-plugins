@@ -31,7 +31,6 @@ export class AAPEntityProvider implements EntityProvider {
   private readonly logger: LoggerService;
   private readonly ansibleServiceRef: IAAPService;
   private readonly scheduleFn: () => Promise<void>;
-  private readonly maxGroupMemberships: number;
   private connection?: EntityProviderConnection;
 
   static pluginLogName = 'plugin-catalog-rhaap';
@@ -93,7 +92,6 @@ export class AAPEntityProvider implements EntityProvider {
     this.env = providerConfig.id;
     this.baseUrl = providerConfig.baseUrl;
     this.orgs = providerConfig.organizations;
-    this.maxGroupMemberships = providerConfig.maxGroupMemberships ?? 50;
     this.logger = logger.child({
       target: this.getProviderName(),
     });
@@ -291,7 +289,6 @@ export class AAPEntityProvider implements EntityProvider {
                 nameSpace: 'default',
                 user: user as User,
                 groupMemberships: userMembers,
-                maxGroupMemberships: this.maxGroupMemberships, // Limit to prevent JWT token size issues
               });
               entities.push(userEntity);
               return { success: true, user };
@@ -346,7 +343,6 @@ export class AAPEntityProvider implements EntityProvider {
                 nameSpace: 'default',
                 user: user as User,
                 groupMemberships: userMembers,
-                maxGroupMemberships: this.maxGroupMemberships, // Limit to prevent JWT token size issues
               });
               entities.push(userEntity);
               return { success: true, user };
@@ -502,7 +498,6 @@ export class AAPEntityProvider implements EntityProvider {
         nameSpace: 'default',
         user: foundUser,
         groupMemberships: userMembers,
-        maxGroupMemberships: this.maxGroupMemberships, // Limit to prevent JWT token size issues
       });
 
       const entitiesToAdd = [
