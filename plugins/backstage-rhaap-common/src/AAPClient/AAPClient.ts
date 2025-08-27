@@ -772,14 +772,14 @@ export class AAPClient implements IAAPService {
     if (resource.includes('job_templates')) {
       if (this.catalogConfig.organizations.length === 1) {
         urlSearchParams.set(
-          'organization__name__icontains',
+          'organization__name__iexact',
           this.catalogConfig.organizations.toString(),
         );
       }
       // Adds support for multiple orgs with OR operator
       else if (this.catalogConfig.organizations.length > 1) {
         this.catalogConfig.organizations.forEach(orgName => {
-          urlSearchParams.set('or__organization__name__icontains', orgName);
+          urlSearchParams.set('or__organization__name__iexact', orgName);
         });
       }
       if (this.catalogConfig.surveyEnabled !== undefined) {
@@ -791,7 +791,7 @@ export class AAPClient implements IAAPService {
 
       if (this.catalogConfig.jobTemplateLabels.length > 0) {
         this.catalogConfig.jobTemplateLabels.forEach(label => {
-          urlSearchParams.set(`or__labels__name__icontains`, label);
+          urlSearchParams.set(`or__labels__name__iexact`, label);
         });
       }
     }
@@ -980,14 +980,14 @@ export class AAPClient implements IAAPService {
       urlSearchParams.set('page_size', '200');
       if (this.catalogConfig.organizations.length === 1) {
         urlSearchParams.set(
-          'name__icontains',
+          'name__iexact',
           this.catalogConfig.organizations.toString(),
         );
       }
       // Adds support for multiple orgs with OR operator
       else if (this.catalogConfig.organizations.length > 1) {
         this.catalogConfig.organizations.forEach(orgName => {
-          urlSearchParams.set('or__name__icontains', orgName);
+          urlSearchParams.set('or__name__iexact', orgName);
         });
       }
       const rawOrgs = await this.executeCatalogRequest(
@@ -1136,14 +1136,14 @@ export class AAPClient implements IAAPService {
     // Fetch details of orgs that are configured in app-config.
     if (this.catalogConfig.organizations.length === 1) {
       urlSearchParams.set(
-        'name__icontains',
+        'name__iexact',
         this.catalogConfig.organizations.toString(),
       );
     }
     // Adds support for multiple orgs with OR operator
     else if (this.catalogConfig.organizations.length > 1) {
       this.catalogConfig.organizations.forEach(orgName => {
-        urlSearchParams.set('or__name__icontains', orgName);
+        urlSearchParams.set('or__name__iexact', orgName);
       });
     }
     const orgs = await this.executeCatalogRequest(
@@ -1216,14 +1216,14 @@ export class AAPClient implements IAAPService {
     urlSearchParams.set('page_size', '200');
     if (this.catalogConfig.organizations.length === 1) {
       urlSearchParams.set(
-        'organization__name__icontains',
+        'organization__name__iexact',
         this.catalogConfig.organizations.toString(),
       );
     }
     // Adds support for multiple orgs with OR operator
     else if (this.catalogConfig.organizations.length > 1) {
       this.catalogConfig.organizations.forEach(orgName => {
-        urlSearchParams.set(`or__organization__name__icontains`, orgName);
+        urlSearchParams.set(`or__organization__name__iexact`, orgName);
       });
     }
 
@@ -1233,7 +1233,7 @@ export class AAPClient implements IAAPService {
 
     if (jobTemplateLabels.length > 0) {
       jobTemplateLabels.forEach(label => {
-        urlSearchParams.set(`or__labels__name__icontains`, label);
+        urlSearchParams.set(`or__labels__name__iexact`, label);
       });
     }
     this.logger.info(`Fetching job templates from RH AAP.`);
