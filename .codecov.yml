@@ -15,11 +15,12 @@ coverage:
     - "e2e-tests/**/*"          # Ignore e2e tests
     - "examples/**/*"           # Ignore examples
     - "docs/**/*"               # Ignore documentation
-
-  # Only include plugins directory for coverage
-  paths:
-    - "plugins/"
-
+    - "**/mock/*" 
+    - "**/dynamic/*"
+    - "**/mock*.ts"
+    - "**/Mock*.ts"
+ 
+  
   # Coverage targets
   status:
     project:
@@ -30,6 +31,13 @@ coverage:
       default:
         target: 80%              # Target 80% coverage for new code
         threshold: 10%           # Allow 10% drop for patches
+
+# Add a dedicated flag that scopes UI/metrics to plugins
+flags:
+  plugins:
+    paths:
+      - "plugins/"
+    carryforward: true
 
 # Comment configuration
 comment:
