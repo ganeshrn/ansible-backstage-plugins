@@ -53,10 +53,10 @@ jobs:
       - name: Setup local Turbo cache
         uses: dtinth/setup-github-actions-caching-for-turbo@v1 # v1
 
-      - name: Install dependencies
-        uses: backstage/actions/yarn-install@b3c1841fd69e1658ac631afafd0fb140a2309024 # v0.6.17
+      - name: Yarn install (cached)
+        uses: ./.github/actions/yarn-install
         with:
-          cache-prefix: ${{ runner.os }}-v${{ matrix.node-version }}
+            cache-prefix: ${{ github.ref_name }}-${{ runner.os }}-${{ matrix.node-version }}
 
       - name: Build packages
         run: yarn run build
@@ -87,11 +87,11 @@ jobs:
       - name: Setup local Turbo cache
         uses: dtinth/setup-github-actions-caching-for-turbo@cc723b4600e40a6b8815b65701d8614b91e2669e # v1
 
-      - name: Install dependencies
-        uses: backstage/actions/yarn-install@b3c1841fd69e1658ac631afafd0fb140a2309024 # v0.6.17
+      - name: Yarn install (cached)
+        uses: ./.github/actions/yarn-install
         with:
-          cache-prefix: ${{ runner.os }}-v${{ matrix.node-version }}
-
+            cache-prefix: ${{ github.ref_name }}-${{ runner.os }}-${{ matrix.node-version }}
+  
       - name: Run Lint
         run: yarn lint:all
 
@@ -109,6 +109,39 @@ jobs:
           fail_ci_if_error: false
           verbose: true
 
+      - name: Upload Code Coverage Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report-${{ matrix.node-version }}
+          path: ./coverage/lcov.info
+        
+      # Prepare Sonar arguments
+      - name: Prepare Sonar arguments
+        id: sonar-args
+        run: |
+            echo "SONAR_ARGS=-Dsonar.organization=ansible \
+            -Dsonar.projectKey=ansible_ansible-backstage-plugins \
+            -Dsonar.projectName='ansible-backstage-plugins' \
+            -Dsonar.sources=plugins \
+            -Dsonar.tests=plugins \
+            -Dsonar.test.inclusions=**/*.test.ts,**/*.test.tsx,**/*.test.js,**/*.test.jsx \
+            -Dsonar.exclusions=**/*.test.ts,**/*.test.tsx,**/*.test.js,**/*.test.jsx,**/.eslintrc.js \
+            -Dsonar.javascript.lcov.reportPaths=./coverage/lcov.info" >> $GITHUB_ENV
+
+      # SonarCloud Scan for PRs
+      - name: SonarCloud Scan (Pull Request)
+        if: github.event_name == 'pull_request'
+        uses: SonarSource/sonarqube-scan-action@v6
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            ${{ env.SONAR_ARGS }}
+            -Dsonar.scm.revision=${{ github.event.pull_request.head.sha }}
+            -Dsonar.pullrequest.key=${{ github.event.pull_request.number }}
+            -Dsonar.pullrequest.branch=${{ github.event.pull_request.head.ref }}
+            -Dsonar.pullrequest.base=${{ github.event.pull_request.base.ref }}            
+  
   all-green:
     if: ${{ always() }}
     name: check
@@ -123,3 +156,4 @@ jobs:
           '${{ needs.build.result }}',
           '${{ needs.test.result }}'
           ])"
+          

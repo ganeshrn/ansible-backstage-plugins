@@ -137,14 +137,6 @@ catalog:
             schedule:
               frequency: { minutes: 60 }
               timeout: { minutes: 15 }
-          # ADDED FOR FUTURE REFERENCE
-          # TODO: UNCOMMENT FOR PATTERN INTEGRATION
-          # collections:
-          #   enabled: true
-          #   schedule:
-          #     frequency: { minutes: 5 }
-          #     timeout: { seconds: 30 }
-
 ansible:
   analytics:
     enabled: true

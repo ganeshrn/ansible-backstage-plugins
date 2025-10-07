@@ -201,35 +201,9 @@ Enable > Auto Attach: With Flag
 yarn start-backend --inspect
 ```
 
-## Installation - with  
+## Installation - with rhdh
 
-### Setup janus-idp 
-
-Refer to the step mentioned here <https://github.com//blob/main/#installing-a-dynamic-plugin-package-in-the-showcase>
-
-Clone the  repository.
-From the ``
-folder, run the following command.
-
-### Install and prepare the plugin
-
-To install the frontend plugin dependency in the Ansible plugins path, run the following command from the `ansible-backstage-plugins/plugins/scaffolder-backend-module-backstage-rhaap` folder
-
-```bash
-yarn install
-yarn export-dynamic
-```
-
-To load the frontend plugin with  locally, follow the steps below.
-
-- Run the following commands
-
-```bash
-pkg=<local-clone-parent-path-replace-me>/ansible-backstage-plugins/plugins/scaffolder-backend-module-backstage-rhaap
-archive=$(npm pack $pkg)
-tar -xzf "$archive" && rm "$archive"
-mv package $(echo $archive | sed -e 's:\.tgz$::')
-```
+Refer to the step mentioned here <https://github.com//blob/main/docs/dynamic-plugins/packaging-dynamic-plugins.md>
 
 ### Plugin registration with 
 
@@ -280,11 +254,7 @@ index c679098..c67b5ff 100644
    import('@backstage/plugin-catalog-backend-module-scaffolder-entity-model'),
 ```
 
-Note - This step is not required when testing the plugin with upstream backstage or  RHDH, because both have the `@backstage/plugin-scaffolder-backend-module-github` pre-registered.
-For testing with  , the step is required because
-it does not pack the extra actions by default. Run yarn-install from the  root for the changes to take effect.
-
-### Start the backend by running the command in the root folder of ``
+### Start the backend by running the command in the root folder of `rhdh`
 
 cloned repository path.
 
@@ -322,16 +292,7 @@ catalog:
         [Component, System, Group, Resource, Location, Template, API, Users]
   locations:
     - type: url
-      # 
-      # target: https://github.com//blob/main/all.yaml
-      # 
-      target: https://github.com//blob/ansible-patterns/all.yaml
-      # 
-      # target: https://github.com/ansible/ansible-rhdh-templates/blob/ansible-patterns/all.yaml
-      rules:
-        - allow: [Template]
-    - type: file
-      target: all.yaml
+      target: https://github.com/ansible/ansible-rhdh-templates/blob/main/all.yaml
       rules:
         - allow: [Template]
   providers:
@@ -344,18 +305,4 @@ ansible:
   rhaap:
     baseUrl: { $AAP_URL }
     checkSSL: false
-    :
-      type: file
-      target: ''
-      # Use cases on github:
-      # type: url
-      # target: https://github.com/kcagran/test-templates
-      # gitBranch: main
-      # gitUser: { $GIT_USER }
-      # gitEmail: { $GIT_EMAIL }
-# If showcase location type is url:
-#integrations:
-#  github:
-#    - host: github.com
-#      token: { $GITHUB_TOKEN}
 ```

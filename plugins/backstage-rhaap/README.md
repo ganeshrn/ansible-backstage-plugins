@@ -158,35 +158,9 @@ Enable > Auto Attach: With Flag
 yarn start-backend --inspect
 ```
 
-## Installation - with  
+## Installation - with rhdh
 
-### Setup janus-idp 
-
-Refer to the step mentioned here <https://github.com//blob/main/#installing-a-dynamic-plugin-package-in-the-showcase>
-
-Clone the  repository.
-From the ``
-folder run the below command
-
-### Install and prepare the plugin
-
-Install the frontend plugin dependency in the Ansible plugins path by running the following command from the `ansible-backstage-plugins/plugins/backstage-rhaap-backend` folder.
-
-```bash
-yarn install
-yarn export-dynamic
-```
-
-To load the frontend plugin with  locally, follow the steps below.
-
-- Run the following commands
-
-```bash
-pkg=<local-clone-parent-path-replace-me>/ansible-backstage-plugins/plugins/backstage-rhaap
-archive=$(npm pack $pkg)
-tar -xzf "$archive" && rm "$archive"
-mv package $(echo $archive | sed -e 's:\.tgz$::')
-```
+Refer to the step mentioned here <https://github.com//blob/main/docs/dynamic-plugins/packaging-dynamic-plugins.md>
 
 ### Plugin registration with 
 
@@ -207,7 +181,7 @@ dynamicPlugins:
           path: /ansible
 ```
 
-### Start the front end and backend by running the command in the root folder of `` cloned repository path.
+### Start the front end and backend by running the command in the root folder of `rhdh` cloned repository path.
 
 ```bash
 LOG_LEVEL=debug yarn start

@@ -30,3 +30,79 @@ jobs:
 
       - name: Deploy to GitHub Pages
         run: mkdocs gh-deploy --force
+
+  test:
+    name: Test with Node.js ${{ matrix.node-version }}
+    runs-on: ubuntu-latest
+    permissions:
+        actions: read
+        checks: read
+        contents: read
+        id-token: write
+    strategy:
+      matrix:
+        node-version: [20, 22]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a # v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Setup local Turbo cache
+        uses: dtinth/setup-github-actions-caching-for-turbo@cc723b4600e40a6b8815b65701d8614b91e2669e # v1
+
+      - name: Install dependencies
+        uses: backstage/actions/yarn-install@b3c1841fd69e1658ac631afafd0fb140a2309024 # v0.6.17
+        with:
+          cache-prefix: ${{ runner.os }}-v${{ matrix.node-version }}
+
+      - name: Run Lint
+        run: yarn lint:all
+
+      - name: Run tests
+        id: tests
+        run: |
+          yarn run test:all
+          npx -y nyc report --reporter html --reporter text -t coverage --report-dir coverage/summary
+      
+      - name: Upload coverage report to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          use_oidc: ${{ github.event_name == 'push'}}
+          file: ./coverage/lcov.info
+          fail_ci_if_error: false
+          verbose: true
+
+      - name: Upload Code Coverage Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report-${{ matrix.node-version }}
+          path: ./coverage/lcov.info
+        
+      # Prepare Sonar arguments
+      - name: Prepare Sonar arguments
+        id: sonar-args
+        run: |
+            echo "SONAR_ARGS=-Dsonar.organization=ansible \
+            -Dsonar.projectKey=ansible_ansible-backstage-plugins \
+            -Dsonar.projectName='ansible-backstage-plugins' \
+            -Dsonar.sources=plugins \
+            -Dsonar.tests=plugins \
+            -Dsonar.test.inclusions=**/*.test.ts,**/*.test.tsx,**/*.test.js,**/*.test.jsx \
+            -Dsonar.exclusions=**/*.test.ts,**/*.test.tsx,**/*.test.js,**/*.test.jsx,**/.eslintrc.js \
+            -Dsonar.javascript.lcov.reportPaths=./coverage/lcov.info" >> $GITHUB_ENV
+
+      # SonarCloud Scan for main branch
+      - name: SonarCloud Scan (Main Branch)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: SonarSource/sonarqube-scan-action@v6
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: ${{ env.SONAR_ARGS }}
