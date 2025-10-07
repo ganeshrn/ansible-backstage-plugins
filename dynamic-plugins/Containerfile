@@ -6,7 +6,7 @@ COPY . .
 # Required labels for Red Hat certification
 LABEL name="ansible-backstage-plugins" \
       vendor="Red Hat, Inc." \
-      version="2.0.0" \
+      version="2.0.1" \
       release="1" \
       summary="Red Hat Developer Hub Ansible Backstage Dynamic Plugins" \
       description="Dynamic plugins collection for Red Hat Developer Hub (RHDH) providing Ansible automation capabilities, authentication, catalog management, and scaffolding functionality." \
