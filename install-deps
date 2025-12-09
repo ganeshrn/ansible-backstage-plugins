@@ -9,24 +9,54 @@ if [ ! -d "$pluginsDir" ]; then
   exit 1
 fi
 
+echo "==================== Ansible Backstage Plugins - Dependency Installation ===================="
+echo ""
+echo "Installing dependencies for all plugins:"
+echo "  - auth-backend-module-rhaap-provider"
+echo "  - backstage-rhaap"
+echo "  - backstage-rhaap-common"
+echo "  - catalog-backend-module-rhaap"
+echo "  - catalog-backend-module-ansible-content-discovery (NEW)"
+echo "  - scaffolder-backend-module-backstage-rhaap"
+echo "  - self-service"
+echo ""
+
 # Loop through each subdirectory in the ./plugins directory
 for pluginDir in "$pluginsDir"/*; do
   if [ -d "$pluginDir" ]; then
-    echo "==================== $pluginDir ===================="
+    pluginName=$(basename "$pluginDir")
+    echo "==================== Installing: $pluginName ===================="
+    
+    # Highlight the new plugin
+    if [ "$pluginName" = "catalog-backend-module-ansible-content-discovery" ]; then
+      echo "🆕 NEW PLUGIN: Ansible Content Discovery"
+      echo "   Discovers Ansible collections from GitHub repositories"
+    fi
+    
     yarn install
     printf "\n"
   fi
 done
-printf "==================== Step: Plugin Deps Installation => Complete ====================\n"
+printf "==================== Step: Plugin Deps Installation => Complete ====================\n\n"
 
 printf "==================== Step: Root Deps Installation => Start ====================\n"
 yarn install
-printf "==================== Step: Root Deps Installation => Complete ====================\n"
+printf "==================== Step: Root Deps Installation => Complete ====================\n\n"
 
-printf "==================== Step: yarn tsc => Start ====================\n"
+printf "==================== Step: TypeScript Compilation => Start ====================\n"
 if ! yarn tsc; then
-  echo "==================== Step: yarn tsc => Failed ===================="
+  echo "==================== Step: TypeScript Compilation => Failed ===================="
+  echo "❌ TypeScript compilation failed. Please check the errors above."
   popd > /dev/null || exit
   exit 1
 fi
-echo "==================== Step: yarn tsc => Complete ===================="
+echo "==================== Step: TypeScript Compilation => Complete ====================\n"
+
+echo ""
+echo "✅ All dependencies installed successfully!"
+echo ""
+echo "Next steps:"
+echo "  1. Update app-config.yaml with your GitHub organization"
+echo "  2. Set GITHUB_TOKEN environment variable"
+echo "  3. Run: yarn start"
+echo ""

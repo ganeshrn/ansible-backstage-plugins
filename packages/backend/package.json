@@ -16,7 +16,9 @@
     "build-image": "docker build ../.. -f Dockerfile --tag backstage"
   },
   "dependencies": {
+    "@ansible/backstage-plugin-ansible-mcp-tool": "workspace:^",
     "@ansible/backstage-plugin-auth-backend-module-rhaap-provider": "workspace:^",
+    "@ansible/backstage-plugin-catalog-backend-module-ansible-content-discovery": "workspace:^",
     "@ansible/backstage-plugin-catalog-backend-module-rhaap": "workspace:^",
     "@ansible/backstage-rhaap-common": "workspace:^",
     "@ansible/plugin-scaffolder-backend-module-backstage-rhaap": "workspace:^",
@@ -34,6 +36,7 @@
     "@backstage/plugin-catalog-backend-module-logs": "^0.1.10",
     "@backstage/plugin-catalog-backend-module-scaffolder-entity-model": "^0.2.8",
     "@backstage/plugin-kubernetes-backend": "^0.19.6",
+    "@backstage/plugin-mcp-actions-backend": "^0.1.5",
     "@backstage/plugin-permission-backend": "^0.7.2",
     "@backstage/plugin-permission-backend-module-allow-all-policy": "^0.2.8",
     "@backstage/plugin-permission-common": "^0.9.0",

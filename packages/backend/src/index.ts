@@ -59,8 +59,19 @@ backend.add(import('@backstage/plugin-search-backend-module-techdocs'));
 // kubernetes
 backend.add(import('@backstage/plugin-kubernetes-backend'));
 
+// Ansible plugins
 backend.add(import('@ansible/backstage-plugin-catalog-backend-module-rhaap'));
+backend.add(
+  import(
+    '@ansible/backstage-plugin-catalog-backend-module-ansible-content-discovery'
+  ),
+);
 backend.add(
   import('@ansible/plugin-scaffolder-backend-module-backstage-rhaap'),
 );
+
+// MCP plugins
+backend.add(import('@backstage/plugin-mcp-actions-backend'));
+backend.add(import('@ansible/backstage-plugin-ansible-mcp-tool'));
+
 backend.start();
